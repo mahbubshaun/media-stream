@@ -26,7 +26,7 @@ Here are some other features:
 </div>
 
 <div align="center">
-<img src="https://github.com/martymfly/expo-file-manager/blob/main/screenshots/1.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/1.png" height="500"/>
 <img src="https://github.com/martymfly/expo-file-manager/blob/main/screenshots/2.png" height="500"/>
 <img src="https://github.com/martymfly/expo-file-manager/blob/main/screenshots/3.png" height="500"/>
 </div>
