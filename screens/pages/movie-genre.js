@@ -18,6 +18,7 @@ class GenreMovies extends Component{
             order: this.props.route.params.order,
             genre: this.props.route.params.genre,
             name: this.props.route.params.name,
+            id: this.props.route.params.id,
             movies: [],
             page: 1,
             loading: false,
@@ -33,15 +34,37 @@ class GenreMovies extends Component{
             this.setState({
                 loading: true
             }, () => {
-                var link = `${config.API_URL}/list_movies.json?genre=${this.state.genre}&page=${this.state.page}&sort_by=${this.state.sortBy}&order_by=desc&limit=${config.RESULT_SIZE}`;
-                if(this.state.order !== undefined) link = `${config.API_URL}/list_movies.json?page=${this.state.page}&sort_by=${this.state.order}&order_by=desc&limit=${config.RESULT_SIZE}`;
-                axios.get(link)
+                const headers = {
+                    // Add any headers you need here
+                    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmNjlmNWFhODMxZGU2Y2NhM2Q4NmU3ZWI4NzY1NGNjYSIsInN1YiI6IjY1NWE5YmVhZWE4NGM3MTA5NmRmN2YyYSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.7aB76asDpvkHNrf60M2VQ1GZYtK5i8VO8o4tvnufxnI',
+                    'Content-Type': 'application/json',
+                  };
+                
+                // var link = `${config.API_URL}/list_movies.json?genre=${this.state.genre}&page=${this.state.page}&sort_by=${this.state.sortBy}&order_by=desc&limit=${config.RESULT_SIZE}`;
+                var link = `${config.API_URL}/discover/movie?include_adult=false&include_video=false&language=en-US&page=${this.state.page}&sort_by=popularity.desc&with_genres=${this.state.id}`;
+                if(this.state.order !== undefined) 
+                {
+                    link = `${config.API_URL}/discover/movie?include_adult=false&include_video=false&language=en-US&page=${this.state.page}&sort_by=popularity.desc&with_genres=${this.state.id}`;
+                }
+                if (this.state.name === 'Popular')
+                {
+                    link = `${config.API_URL}/movie/popular?include_adult=false&include_video=false&language=en-US&page=${this.state.page}`;
+                }
+                if (this.state.name === 'Top Rated')
+                {
+                    link = `${config.API_URL}/movie/top_rated?include_adult=false&include_video=false&language=en-US&page=${this.state.page}`;
+                }
+                
+                console.log('printing lik')
+                console.log(link)
+                axios.get(link ,{ headers })
                 .then((movies) => {
                     this.setState({
-                        movies: [...this.state.movies, ...movies.data.data.movies],
+                        movies: [...this.state.movies, ...movies.data.results],
                         loading: false,
                         page: this.state.page + 1,
-                        hasMore: movies.data.data.movies.length < config.RESULT_SIZE ? false : true
+                        hasMore: movies.data.results.length == 0 ? false : true
+                       
                     })
                 })
             })
@@ -71,7 +94,7 @@ class GenreMovies extends Component{
     render(){
         return (
             <View style={style.main}>
-                <StatusBar backgroundColor="#ffffff" barStyle="light-content" />
+                {/* <StatusBar backgroundColor="#ffffff" barStyle="light-content" /> */}
                 <ScrollView scrollEventThrottle={10} onScroll={(e) => this.scroll(e)}>
                     <View style={[style.flexboxContainer, style.flexColumn]}>
                         {/* Popular movie listing */}
@@ -80,7 +103,7 @@ class GenreMovies extends Component{
                                 <View style={style.flexbox}>
                                     <Text style={movie.heading}>{this.state.name}</Text>
                                 </View>
-                                {this.state.order === undefined && 
+                                {/* {this.state.order === undefined && 
                                     <View style={style.flexbox}>
                                         <Picker selectedValue={this.state.sortBy} onValueChange={this.sortByChange} mode="dropdown" textStyle={style.pickerText}>
                                             <Picker.Item label="Rating" value="rating" />
@@ -93,7 +116,7 @@ class GenreMovies extends Component{
                                             <Picker.Item label="Download count" value="download_count" />
                                         </Picker>
                                     </View>
-                                }
+                                } */}
                             </View>
                         </View>
                         <View style={[style.flexboxContainer, style.flexStart, style.flexWrap, {paddingLeft: 15, paddingRight: 15}]}>

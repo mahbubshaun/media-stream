@@ -1,13 +1,12 @@
 {
   "expo": {
-    "name": "expo-file-manager",
-    "slug": "expo-file-manager",
+    "name": "media-stream",
+    "slug": "media-stream",
     "version": "1.0.0",
-    "orientation": "automatic",
     "userInterfaceStyle": "automatic",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/live-streaming.png",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/live-streaming.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFF"
     },
@@ -23,20 +22,21 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone"
-      }
+      },
+      "bundleIdentifier": "com.shaun.mediastream"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/live-streaming.png",
         "backgroundColor": "#FFF"
       },
-      "package": "com.martymfly.expofilemanager",
+      "package": "com.shaun.mediastream",
       "permissions": [
         "android.permission.CAMERA"
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/live-streaming.png"
     },
     "plugins": [
       "expo-barcode-scanner"

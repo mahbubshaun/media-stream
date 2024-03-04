@@ -5,7 +5,7 @@ import { style } from "../screens/style/base";
 import { movie } from "../screens/style/movie";
 
 import heart from "../assets/images/heart.png";
-
+import FastImage from 'react-native-fast-image';
 class MovieList extends Component{
     constructor(props){
         super(props);
@@ -21,18 +21,24 @@ class MovieList extends Component{
         return (
             <>
                 <View style={[movie.movie, movie.imageCont, this.state.width ? {width: this.state.width, height: this.state.height, marginRight: 0} : {}]}>
-                    <Image source={{uri: this.state.el.medium_cover_image || this.state.el.large_cover_image}} style={[movie.moviePoster, this.state.width ? {width: this.state.width, height: this.state.height} : {}]} resizeMode="cover"/>
+                    {/* <Image source={{uri:`http://image.tmdb.org/t/p/original${this.state.el.poster_path}`}} style={[movie.moviePoster, this.state.width ? {width: this.state.width, height: this.state.height} : {}]} resizeMode="cover"/> */}
+                    <FastImage
+                    source={{ uri: `http://image.tmdb.org/t/p/w500${this.state.el.poster_path}` , priority: FastImage.priority.high}}
+                    style={[movie.moviePoster, this.state.width ? {width: this.state.width, height: this.state.height} : {}]}
+                    resizeMode={FastImage.resizeMode.cover}
+                  />
                 </View>
                 <View style={[movie.movie, movie.details, this.state.width ? {width: this.state.width, marginRight: 0} : {}]}>
-                    <Text style={[movie.title, this.state.width ? {width: this.state.width + 3} : {}]} numberOfLines={1} ellipsizeMode="tail">{this.state.el.title_english || this.state.el.title}</Text>
-                    <Text style={movie.subText} numberOfLines={1} ellipsizeMode="tail">{`${this.state.el.runtime} mins | ${this.state.el.mpa_rating || '-'} | ${this.state.el.language}`}</Text>
+                    <Text style={[movie.title, this.state.width ? {width: this.state.width + 3} : {}]} numberOfLines={1} ellipsizeMode="tail">{this.state.el.title}</Text>
+                    {/* <Text style={movie.subText} numberOfLines={1} ellipsizeMode="tail">{`${this.state.el.runtime} mins | ${this.state.el.mpa_rating || '-'} | ${this.state.el.language}`}</Text> */}
                     <View style={[style.flexboxContainer, style.verticalMiddle]}>
                         <View style={[style.flexbox, style.flexboxContainer]}>
-                            {this.state.el.genres.length > 0 && <Text style={[movie.subText, style.border, movie.posterGenre]}>{this.state.el.genres[0]}</Text>}
+                            {this.state.el.genre_ids.length > 0 && <Text style={[movie.subText, style.border, movie.posterGenre]}>{this.state.el.vote_average.toFixed(1)}</Text>}
+                            {/* <Image source={heart} style={movie.heartIcon}/> */}
                         </View>
                         <View style={[style.flexbox, style.flexboxContainer, style.flexEnd]}>
-                            <Image source={heart} style={movie.heartIcon}/>
-                            <Text style={[movie.subText, style.textRight]}>{this.state.el.rating}</Text>
+                            {/* <Image source={heart} style={movie.heartIcon}/> */}
+                            {/* <Text style={[movie.subText, style.textRight]}>{this.state.el.vote_average}</Text> */}
                         </View>
                     </View>
                 </View>

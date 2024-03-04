@@ -45,6 +45,15 @@ export const movieDetails = StyleSheet.create({
         fontSize: 14,
         marginBottom: 10
     },
+
+    rating: {
+        backgroundColor: '#eddbda',
+        fontSize: 14,
+        marginBottom: 10
+
+        
+
+    },
     heartIcon: {
         width: 17,
         height: 17,
@@ -55,6 +64,13 @@ export const movieDetails = StyleSheet.create({
         fontSize: 22,
         color: '#FFFFFF',
         marginBottom: 5
+    },
+    date: {
+        fontWeight: "300",
+        fontSize: 15,
+        color: '#FFFFFF',
+        marginTop: 10,
+        marginBottom: 20
     },
     leftWidth: {
         width: Dimensions.get('window').width - 160

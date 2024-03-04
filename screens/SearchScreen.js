@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, StyleSheet, Dimensions, ScrollView, Image } from "react-native";
+
+import { View, StyleSheet, Dimensions, ScrollView, Image, TouchableOpacity } from "react-native";
 import { TextInput } from "react-native-paper";
 import Icon from "react-native-vector-icons/FontAwesome";
 import RBSheet from "react-native-raw-bottom-sheet";
@@ -7,25 +8,112 @@ import ToggleButton from "../components/ToggleButton";
 import { useTheme, Text, IconButton } from "react-native-paper";
 import CentredActivityIndicator from "../components/CentredActivityIndicator";
 import ContentCard from "../components/ContentCard";
-
+import MovieList from "../components/movie-list";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ReactNativeBlobUtil from "react-native-blob-util";
 import { getPaletteSync } from "@assembless/react-native-material-you";
+import axios from 'axios';
+import { config } from '../components/constant';
 
-const SearchScreen = ({ navigation }) => {
+import { useNavigation } from '@react-navigation/native';
+import { style } from "../screens/style/base";
+import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
+import { setTabbarVisible } from '../features/files/tabbarStyleSlice';
 
-	const common = require("../data/common.json");
-	const genres = common.genresFasel;
+const SearchScreen = ({ route, navigation }) => {
+	// Both web and native return the Rollbar.js interface here.
+    // const navigation = useNavigation();
+    const categories = [
+		{
+			"label": "Movies",
+			"key": "movies"
+		},
+		{
+			"label": "Series",
+			"key": "series"
+		},
+		{
+			"label": "Anime",
+			"key": "anime"
+		},
+		{
+			"label": "Asian Series",
+			"key": "asian-series"
+		},
+		{
+			"label": "Arabic Series",
+			"key": "arabic-series"
+		},
+		{
+			"label": "Arabic Movies",
+			"key": "arabic-movies"
+		},
+		{
+			"label": "TV Shows",
+			"key": "tvshows"
+		}
+	]
+	const genres = [
+		"Netflix",
+		"Ramadan",
+		"Fantasy",
+		"Music",
+		"Reality-tv",
+		"News",
+		"Youth",
+		"Psychological",
+		"Family",
+		"History",
+		"Crime",
+		"Sport",
+		"Life",
+		"Mystery",
+		"Drama",
+		"Biography",
+		"Science Fiction",
+		"Zombies",
+		"Animation",
+		"Adventure",
+		"Film-noir",
+		"Animated",
+		"Romance",
+		"School",
+		"Friendship",
+		"Comdey",
+		"Sports",
+		"Kids",
+		"Western",
+		"Musical",
+		"Talk-show",
+		"Melodrama",
+		"Dubbed",
+		"Game-show",
+		"Office",
+		"War",
+		"Comedy",
+		"Thriller",
+		"Horror",
+		"Documentary",
+		"Sci-fi",
+		"Short",
+		"Action",
+		"Supernatural"
+	]
+	const dispatch = useAppDispatch();
 
-	let allContentPath =
-		ReactNativeBlobUtil.fs.dirs.DocumentDir + "/all-content.json";
-
-	let featuredContentPath =
-		ReactNativeBlobUtil.fs.dirs.DocumentDir + "/featured-content.json";
-
+	React.useEffect(() => {
+		const unsubscribe = navigation.addListener('focus', () => {
+		  // The screen is focused
+		  // Call any action
+		  console.log("Search is now focused");
+		  dispatch(setTabbarVisible(true));
+		});
+	
+		// Return the function to unsubscribe from the event so it gets removed on unmount
+		return unsubscribe;
+	  }, [navigation]);
 	const theme = useTheme();
 	const palette = getPaletteSync();
-
 	const [searchText, setSearchText] = useState("");
 	const [allData, setAllData] = useState(null);
 	const [featuredContent, setFeaturedContent] = useState(null);
@@ -36,8 +124,6 @@ const SearchScreen = ({ navigation }) => {
 	const [start, setStart] = useState(0);
 	const [end, setEnd] = useState(20);
 	const pageNumber = end / 20;
-
-	const categories = common.categoriesFasel;
 
 	const handleNext = () => {
 		setStart(end);
@@ -53,40 +139,59 @@ const SearchScreen = ({ navigation }) => {
 		}
 	};
 
+	
 	useEffect(() => {
-		ReactNativeBlobUtil.fs
-			.readFile(featuredContentPath)
-			.then(featuredContent => {
-				setFeaturedContent(JSON.parse(featuredContent));
-				setData(JSON.parse(featuredContent).content);
-			});
-		ReactNativeBlobUtil.fs
-			.readFile(allContentPath)
-			.then(allData => setAllData(JSON.parse(allData)));
-	}, []);
+		console.log(route.name);
+		const fetchData = async () => {
+			try {
+			  const [featured, popular, recent] = await axios.all([
+				axios.get(`${config.API_URL}/list_movies.json?sort_by=like_count&order_by=desc&limit=10`),
+				axios.get(`${config.API_URL}/list_movies.json?sort_by=rating&order_by=desc&limit=${config.RESULT_SIZE}`),
+				axios.get(`${config.API_URL}/list_movies.json?sort_by=year&order_by=desc&limit=${config.RESULT_SIZE}`)
+			  ]);
+	        //   console.log("featured content");
+			//   console.log(featured.data.data.movies);
+			  setFeaturedContent(featured.data.data.movies);
+			  setAllData({
+				content: [...popular.data.data.movies, ...recent.data.data.movies]
+			  });
+			  setData(featured.data.data.movies);
+			} catch (err) {
+			  console.log(err);
+			}
+		  };
+	  
+		  fetchData();
+		}, []);
+	
 
 	const applyFilter = item => {
-		const genreIntersection = item["Genres"].filter(value =>
+		const genreIntersection = item["genres"].filter(value =>
+	
 			selectedGenres.includes(value),
 		);
+		console.log(item["category"]);
+		console.log(appliedFilters);
 		if (
-			appliedFilters.includes(item["Category"]) ||
+			appliedFilters.includes(item["category"]) ||
 			genreIntersection.length > 0
 		) {
 			return item;
 		} else {
 			// pass
+			//return item;
 		}
 	};
 
 	useEffect(() => {
 		setStart(0);
 		setEnd(20);
+		console.log("inside useeffect");
 		if (allData && featuredContent) {
 			if (searchText !== "") {
 				var searched = allData.content.filter(item => {
 					if (
-						item["Title"].toLowerCase().includes(searchText.toLocaleLowerCase())
+						item["title"].toLowerCase().includes(searchText.toLocaleLowerCase())
 					) {
 						return item;
 					} else {
@@ -97,17 +202,30 @@ const SearchScreen = ({ navigation }) => {
 				// pass
 			}
 
+            console.log("before applied filters");
+			try{
 			if (appliedFilters.length !== 0 || selectedGenres.length !== 0) {
+				console.log("inside applied filters");
 				const toUse = searchText === "" ? allData.content : searched;
 				const filtered = toUse.filter(applyFilter);
+				console.log(toUse);
+				console.log(filtered);
 				setData(filtered);
 			} else {
+				console.log("inside else filters");
 				if (searchText !== "") {
+					console.log("inside else search text no null filters");
 					setData(searched);
 				} else {
-					setData(featuredContent.content);
+					console.log("inside else search text null filters");
+					setData(featuredContent);
+					
 				}
 			}
+		}catch(err)
+		{
+			console.log(err);
+		}
 		} else {
 			// pass
 		}
@@ -115,6 +233,7 @@ const SearchScreen = ({ navigation }) => {
 
 	if (data !== null && allData !== null) {
 		return (
+	  <View style={styles.main}>
 			<SafeAreaView>
 				<ScrollView>
 					<View style={styles.searchBarParentStyle}>
@@ -123,27 +242,28 @@ const SearchScreen = ({ navigation }) => {
 							mode="flat"
 							style={{
 								...styles.searchBarStyle,
-								backgroundColor: palette.system_accent1[4] + "3C",
+								backgroundColor: "rgb(186, 193, 204)",
 							}}
 							left={
 								<TextInput.Icon
 									icon="magnify"
-									iconColor={palette.system_accent1[6]}
+									iconColor={"rgb(186, 193, 204)"}
 								/>
 							}
 							underlineColor="transparent"
 							activeUnderlineColor="transparent"
 							cursorColor="black"
 							onChangeText={text => setSearchText(text)}
-							placeholderTextColor={palette.system_accent1[4]}
+							placeholderTextColor={"black"}
 						/>
 						<Icon
 							name="sliders"
 							size={27}
-							color={theme.colors.primary}
+							color={"black"}
 							style={{
 								...styles.iconStyle,
-								backgroundColor: theme.colors.elevation.level4,
+								backgroundColor: "rgb(186, 193, 204)",
+								borderColor: 'rgb(170, 207, 202)'
 							}}
 							onPress={() => bottomSheetRef.current.open()}
 						/>
@@ -158,7 +278,7 @@ const SearchScreen = ({ navigation }) => {
 							<Text
 								style={{
 									...styles.notFoundTextStyle,
-									color: theme.colors.primary,
+									// color: theme.colors.primary,
 								}}>
 								Not Found
 							</Text>
@@ -175,19 +295,26 @@ const SearchScreen = ({ navigation }) => {
 								flex: 1,
 								justifyContent: "center",
 							}}>
+					
 							{data.slice(start, end).map(item => (
-								<ContentCard
-									width={180}
-									height={270}
-									navigation={navigation}
-									id={item["key"]}
-									category={item["Category"]}
-									title={item["Title"]}
-									rating={item["Rating"]}
-									imageSource={item["Image Source"]}
-									key={item["key"]}
-								/>
+								// <ContentCard
+								// 	width={180}
+								// 	height={270}
+								// 	item={item}
+								// 	id={item["id"]}
+								// 	category={'movies'}
+								// 	title={item["title"]}
+								// 	rating={item["rating"]}
+								// 	imageSource={item["medium_cover_image"]}
+								// 	key={item["id"]}
+								// />
+                                <View >
+								<TouchableOpacity style={[style.flexbox]}  onPress={() => {navigation.navigate('Details', {data: item, cameFromSearch: false})}}>
+                                    <MovieList data={item}/>
+                                </TouchableOpacity>
+								</View>
 							))}
+				
 						</ScrollView>
 					)}
 
@@ -223,15 +350,23 @@ const SearchScreen = ({ navigation }) => {
 						height={Dimensions.get("window").height * 0.9}
 						customStyles={{
 							wrapper: {
-								backgroundColor: "rgba(0, 0, 0, 0.75)",
+								backgroundColor: 'black',
 							},
 							draggableIcon: {
-								backgroundColor: theme.colors.primary,
+								backgroundColor: "white",
 							},
 							container: {
 								borderRadius: 30,
-								backgroundColor: theme.colors.background,
-							},
+								backgroundColor: '#31364A',
+							}
+							// draggableIcon: {
+							// 	backgroundColor: theme.colors.primary,
+							// },
+							// container: {
+							// 	borderRadius: 30,
+							// 	backgroundColor: theme.colors.background,
+							// },
+							
 						}}>
 						<Text style={styles.filterTitleStyle}>Filter</Text>
 						<View style={styles.separatorStyle} />
@@ -266,6 +401,9 @@ const SearchScreen = ({ navigation }) => {
 					</RBSheet>
 				</ScrollView>
 			</SafeAreaView>
+			</View>
+
+			
 		);
 	} else {
 		return <CentredActivityIndicator />;
@@ -273,6 +411,10 @@ const SearchScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+	main: {
+        backgroundColor: '#31364A',
+        height: '100%'
+    },
 	searchBarStyle: {
 		margin: 20,
 		marginRight: 10,
@@ -292,6 +434,7 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	filterTitleStyle: {
+		color: 'white',
 		fontSize: 26,
 		fontWeight: "bold",
 		textAlign: "center",
@@ -299,13 +442,14 @@ const styles = StyleSheet.create({
 		letterSpacing: 1.15,
 	},
 	separatorStyle: {
-		borderBottomColor: "#ddd",
+		borderBottomColor: "white",
 		borderBottomWidth: 3,
 		flex: 1,
 		width: Dimensions.get("window").width * 0.875,
 		alignSelf: "center",
 	},
 	filterSectionStyle: {
+		color: 'white',
 		fontSize: 24,
 		fontWeight: "bold",
 		margin: 15,

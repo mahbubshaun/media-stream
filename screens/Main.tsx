@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { LogBox, View } from 'react-native';
+import { View } from 'react-native';
 
 import { StatusBar } from 'expo-status-bar';
 import { Snackbar } from 'react-native-paper';
@@ -32,10 +32,7 @@ import LockScreen from '../screens/LockScreen';
 
 SplashScreen.preventAutoHideAsync();
 
-LogBox.ignoreLogs([
-  'VirtualizedLists should never',
-  'supplied to `DialogInput`',
-]);
+
 
 export default function Main() {
   const { locked, setLocked } = useLock();
@@ -47,7 +44,7 @@ export default function Main() {
   } = useAppSelector((state) => state.snackbar);
   const colorScheme = useColorScheme();
   const dispatch = useAppDispatch();
-
+  console.log('in main');
   const getPassCodeStatus = async () => {
     const hasPassCode = await SecureStore.getItemAsync('hasPassCode');
     if (JSON.parse(hasPassCode)) {
@@ -113,7 +110,7 @@ export default function Main() {
         {snackMessage}
       </Snackbar>
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
-      <NavigationContainer theme={theme.dark ? DarkTheme : DefaultTheme}>
+      <NavigationContainer theme={DarkTheme}>
         <MainNavigator />
       </NavigationContainer>
     </View>

@@ -34,6 +34,7 @@ export default class VLCPlayerView extends Component {
       paused: true,
       isLoading: true,
       loadingSuccess: false,
+      isLoaded: false,
       isFull: false,
       currentTime: 0.0,
       totalTime: 0.0,
@@ -41,6 +42,7 @@ export default class VLCPlayerView extends Component {
       seek: 0,
       isError: false,
       audioTrack: 1,
+      subTrack: 1
     };
     this.touchTime = 0;
     this.changeUrl = false;
@@ -78,6 +80,7 @@ export default class VLCPlayerView extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+
     if (this.props.uri !== prevProps.uri) {
       console.log("componentDidUpdate");
       this.changeUrl = true;
@@ -86,6 +89,10 @@ export default class VLCPlayerView extends Component {
   }
   updateAudioTrack = (newAudioTrack) => {
     this.setState({ audioTrack: newAudioTrack });
+  };
+
+  updateSubTrack = (newSubTrack) => {
+    this.setState({ subTrack: newSubTrack });
   };
   render() {
     let {
@@ -108,8 +115,15 @@ export default class VLCPlayerView extends Component {
       showLeftButton,
       showMiddleButton,
       showRightButton,
-      errorTitle
+      errorTitle,
+      pickerData, 
+      audioTrackData
     } = this.props;
+    if(audioTrackData)
+    {
+      console.log('updating audio track with ', audioTrackData);
+      this.setState({ audioTrack: audioTrackData });
+    }
     let { isLoading, loadingSuccess, showControls, isError } = this.state;
     let showGG = false;
     let realShowLoding = false;
@@ -142,6 +156,8 @@ export default class VLCPlayerView extends Component {
         activeOpacity={1}
         style={[styles.videoBtn, style]}
         onPressOut={() => {
+          if (this.isLoaded) 
+          {
           let currentTime = new Date().getTime();
           if (this.touchTime === 0) {
             this.touchTime = currentTime;
@@ -152,6 +168,7 @@ export default class VLCPlayerView extends Component {
               this.setState({ showControls: !this.state.showControls });
             }
           }
+        }
         }}>
         <VLCPlayer
           ref={ref => (this.vlcPlayer = ref)}
@@ -168,7 +185,7 @@ export default class VLCPlayerView extends Component {
           onStopped={this.onEnded.bind(this)}
           onPlaying={this.onPlaying.bind(this)}
           audioTrack={this.state.audioTrack}
-          textTrack={3}
+          textTrack={this.state.subTrack}
           // rate={2}
           onLoad={this.onLoad.bind(this)}
           onBuffering={this.onBuffering.bind(this)}
@@ -274,7 +291,10 @@ export default class VLCPlayerView extends Component {
               titleGolive={titleGolive}
               showLeftButton={showLeftButton}
               showMiddleButton={showMiddleButton}
-              showRightButton={showRightButton}
+              showRightButton={true}
+              pickerData={pickerData}
+              updateAudioTrack={this.updateAudioTrack}
+              updateSubTrack={this.updateSubTrack}
             />
           )}
         </View>
@@ -291,6 +311,7 @@ export default class VLCPlayerView extends Component {
     // if (this.state.paused) {
     //   this.setState({ paused: false });
     // }
+    this.isLoaded=true,
     console.log(event)
     console.log('onPlaying');
   }
@@ -314,6 +335,7 @@ export default class VLCPlayerView extends Component {
     // } else {
     //   this.setState({ showControls: true });
     // }
+    
     console.log(event)
     console.log('onLoad');
     this.props.onLoad && this.props.onLoad(event);
@@ -522,7 +544,7 @@ export default class VLCPlayerView extends Component {
   _play = () => {
     console.log('paused call')
     this.setState({ paused: !this.state.paused });
-    this.setState({ audioTrack: 2 });
+    
   };
 }
 

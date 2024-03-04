@@ -8,10 +8,11 @@ import {
   Alert,
   BackHandler,
   TextInput,
+  Text
 } from 'react-native';
 
 import Dialog from 'react-native-dialog';
-
+import ptn from 'parse-torrent-name'
 import {
   Dialog as GalleryDialog,
   ProgressDialog,
@@ -28,6 +29,7 @@ import allProgress from '../utils/promiseProgress';
 
 import { NewFolderDialog } from '../components/Browser/NewFolderDialog';
 import { DownloadDialog } from '../components/Browser/DownloadDialog';
+import { ServerDialog } from '../components/Browser/ServerDialog';
 import { FileTransferDialog } from '../components/Browser/FileTransferDialog';
 
 import axios, { AxiosError } from 'axios';
@@ -38,7 +40,6 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as MediaLibrary from 'expo-media-library';
 import * as mime from 'react-native-mime-types';
-
 import { StackScreenProps } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { ImageInfo } from 'expo-image-picker/build/ImagePicker.types';
@@ -47,6 +48,9 @@ import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { setImages } from '../features/files/imagesSlice';
 import { setSnack, snackActionPayload } from '../features/files/snackbarSlice';
 import { HEIGHT, imageFormats, reExt, SIZE } from '../utils/Constants';
+import DOMParser from 'react-native-html-parser';
+import RNFS from 'react-native-fs';
+import { Storage } from "../components/Storage";
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -67,6 +71,7 @@ const Browser = ({ route }: IBrowserProps) => {
   const [selectedFiles, setSelectedFiles] = useState<fileItem[]>([]);
   const [folderDialogVisible, setFolderDialogVisible] = useState(false);
   const [downloadDialogVisible, setDownloadDialogVisible] = useState(false);
+  const [downloadDialogVisibleForServer, setDownloadDialogVisibleForServer] = useState(false);
   const [renameDialogVisible, setRenameDialogVisible] = useState(false);
   const [newFileName, setNewFileName] = useState('');
   const [renamingFile, setRenamingFile] = useState<fileItem>();
@@ -78,6 +83,14 @@ const Browser = ({ route }: IBrowserProps) => {
   const [newFileActionSheet, setNewFileActionSheet] = useState(false);
   const [moveOrCopy, setMoveOrCopy] = useState('');
   const { multiSelect, allSelected } = useSelectionChange(files);
+  const [videoLinks, setVideoLinks] = useState<string[]>([]);
+  const linkListString = Storage.getString("linklist");
+  const linkList = linkListString ? JSON.parse(linkListString) : {};
+
+  let videoArray = []
+  let parser = '';
+  let parsed = '';
+  parser = new DOMParser.DOMParser();
 
   useEffect(() => {
     getFiles();
@@ -115,6 +128,21 @@ const Browser = ({ route }: IBrowserProps) => {
     return () => backHandler.remove();
   }, []);
 
+
+  function extractMediaName(url) {
+    const match = url.match(/\/([^/]+)\.\w+$/);
+
+    if (match) {
+      const [_, mediaName] = match;
+      return decodeURIComponent(mediaName).replace(/%20/g, ' ');
+    }
+
+    // Return a default value or handle unrecognized URLs
+    return "Unknown";
+  }
+
+
+
   const renderItem = ({ item }: { item: fileItem }) => (
     <FileItem
       item={item}
@@ -129,6 +157,7 @@ const Browser = ({ route }: IBrowserProps) => {
       setNewFileName={setNewFileName}
     ></FileItem>
   );
+  const IDOMParser = require("advanced-html-parser");
 
   const handleDownload = (downloadUrl: string) => {
     axios
@@ -157,6 +186,288 @@ const Browser = ({ route }: IBrowserProps) => {
           message: error.message,
         })
       );
+  };
+  let requestCounter = 0;
+  const maxRequests = 500; // Set your desired maximum request limit
+  let baseUrl; // Variable to store the base URL
+  const accessedSet = new Set();
+  let serverUrl = '';
+  async function findValidVideoLink(url) {
+    if (requestCounter >= maxRequests) {
+      console.log('Maximum request limit reached. Stopping further requests.');
+      return;
+    }
+
+    console.log('Inside findValidU', url);
+
+    if (!url.match(/\.[a-z0-9]+$/i)) {
+      try {
+        const response = await axios.get(url);
+        // console.log(response.data);
+
+        let doc;
+
+        try {
+          // or import IDOMParser from 'advanced-html-parser'
+          doc = IDOMParser.parse(response.data);
+        } catch (er) {
+          console.error('Error parsing HTML:', er);
+          // console.log('HTML content causing the error:', response.data);
+          return; // Exit the function on parsing error
+        }
+
+        let aElements = doc.documentElement.getElementsByTagName('a');
+        // for (let i = 0; i < aElements.length; i++) {
+        //   let href = aElements[i].getAttribute('href');
+        //   console.log(href);
+        // }
+        for (let i = 0; i < aElements.length; i++) {
+          let href = aElements[i].getAttribute('href');
+          console.log('link found ', href);
+          console.log(href);
+          if (href) {
+          if(href.startsWith('/'))
+            {
+              if (url.endsWith('/')) {
+                url = url.slice(0, -1);
+            }
+            }
+          }
+
+          let subpathUrl = baseUrl + href;
+          console.log('subpath url: ', subpathUrl);
+   
+
+          const isSub = await isSubPath(baseUrl, subpathUrl);
+          // if (href && href.startsWith('/') && !href.startsWith('//')) {
+          if (isSub) {
+            console.log('This link is a subpath:', href);
+
+            console.log(isValidVideoLink(subpathUrl));
+
+            const isValid = await isValidVideoLink(subpathUrl);
+
+            if (isValid) {
+              console.log('Found valid video link:', subpathUrl);
+
+              // Extracting domain and folder names
+              const urlParts = url.split('/');
+              if (urlParts.length >= 3) {
+                const domain = urlParts[2].replace(/[^a-zA-Z0-9]/g, '_');
+                const folderNames = urlParts
+                  .slice(3)
+                  .filter((part) => part && !/\.[a-z0-9]+$/i.test(part))
+                  .map((part) => decodeURIComponent(part));
+
+                // Creating folders based on the extracted names
+                let currentPath = docDir + '/' + domain;
+
+                try {
+
+                  FileSystem.makeDirectoryAsync(currentPath);
+
+                  for (const folderName of folderNames) {
+                    currentPath += '/' + folderName;
+                    try {
+                      console.log('Creating directory:', currentPath);
+                      FileSystem.makeDirectoryAsync(currentPath);
+                    } catch (err) {
+
+                    }
+                  }
+                } catch (err) {
+                  console.log(err);
+                }
+
+                // Writing dummy MP4 file
+                getFiles();
+                const fileContent = `Click this link: ${subpathUrl}`;
+                currentPath += '/' + 'medialink.txt';
+
+                try {
+                  FileSystem.writeAsStringAsync(currentPath, fileContent);
+                  console.log('Dummy MP4 file created:', currentPath);
+                  getFiles();
+                } catch (error) {
+                  console.error('Error creating dummy MP4 file:', error);
+                }
+
+                // Handle the valid video link here
+                // if (await isValidVideoLink(subpathUrl))
+                // {
+
+
+
+                // }
+                videoArray.push(subpathUrl);
+
+
+              }
+
+              // Increment the request counter
+              requestCounter++;
+              console.log('Request counter:', requestCounter);
+
+              // Recursive call to continue searching in the subpath
+
+            } else {
+              console.log('Not valid:', subpathUrl);
+              if (accessedSet.has(subpathUrl)) {
+                console.log("Already accessed");
+                continue;
+              } else {
+                accessedSet.add(subpathUrl);
+                // await findValidVideoLink(subpathUrl);
+
+              }
+
+            }
+            // await findValidVideoLink(subpathUrl);
+          } else {
+            console.log('does not meet condition', subpathUrl);
+            console.log(subpathUrl.startsWith("http://" + baseUrl));
+            console.log(baseUrl);
+          }
+          // await findValidVideoLink(subpathUrl);
+        }
+      } catch (error) {
+        console.error('Error during findValidVideoLink:', error);
+      }
+    } else {
+      console.log("URL should not end with a file extension");
+    }
+  }
+
+  async function isSubPath(domain, link) {
+    // Extract the domain part from the link
+    const matches = link.match(/^(https?:\/\/[^/]+)/);
+    const linkDomain = matches && matches[1];
+    // Check if the link's domain matches the given domain
+    return linkDomain === domain;
+  }
+
+  async function isValidVideoLink(href) {
+    // Add your logic to determine if the href is a valid video link with the proper extension
+    // Example: Check if the href ends with a specific video file extension like '.mp4'
+    return href.endsWith('.mp4') || href.endsWith('.mkv');
+  }
+
+
+  const handleServer = async (downloadUrl: string) => {
+
+    if (!baseUrl) {
+      const matches = downloadUrl.match(/^(https?:\/\/[^/]+)/);
+      baseUrl = matches && matches[1];
+      console.log('Base URL:', baseUrl);
+    }
+    console.log('server ur got', downloadUrl);
+    serverUrl = downloadUrl;
+    setImportProgressVisible(true); // Set visibility to true when starting the process
+
+    try {
+      await findValidVideoLink(downloadUrl);
+      setImportProgressVisible(false);
+      // setTimeout(() => {
+      //   setImportProgressVisible(false); // Set visibility to false when the process is complete
+      // }, 1000);
+    } catch (error) {
+      console.error('Error during findValidVideoLink:', error);
+    } finally {
+      // setImportProgressVisible(false); // Set visibility to false when the process is complete
+    }
+    console.log('Printing all video links found', videoArray.length);
+    for (let i = 0; i < videoArray.length; i++) {
+      console.log(videoArray[i]);
+      console.log(i);
+      let movie = extractMediaName(videoArray[i]);
+      let title = ptn(movie).title;
+      console.log(title);
+      Object.assign(linkList, {
+        [title]: {
+          'media_link': videoArray[i],
+          'title': title
+
+        },
+      });
+
+    }
+    // console.log('saving found media links: ', JSON.stringify(linkList));
+    Storage.set("linklist", JSON.stringify(linkList));
+
+
+    //     axios
+    //       .get(downloadUrl)
+    //       .then((res) => {
+    //         console.log(res.data);
+    //         try{
+    //         const parser = new DOMParser.DOMParser();
+    //         const parsed = parser.parseFromString(res.data, 'text/html');
+
+
+    //         const aElements = parsed.getElementsByTagName('a');
+    // for (let i = 0; i < aElements.length; i++) {
+    //   // console.log('Text Content of <a>:', aElements[i].getAttribute('href'));
+    //   const href = aElements[i].getAttribute('href');
+    //   // Check if href is a subpath
+    //   if (href && href.startsWith('/') && !href.startsWith('//')) {
+    //     console.log('This link is a subpath.: ', href);
+    //     axios.get('http://index2.circleftp.net'+href)
+    //       .then(response => {
+    //         console.log(`Axios Response for ${href}:`, response.data);
+    //         const parsed = parser.parseFromString(response.data, 'text/html');
+
+
+    //         const aElements = parsed.getElementsByTagName('a');
+    //         for (let i = 0; i < aElements.length; i++) {
+    //           // console.log('Text Content of <a>:', aElements[i].getAttribute('href'));
+    //           const href = aElements[i].getAttribute('href');
+    //           // Check if href is a subpath
+    //           if (href && href.startsWith('/') && !href.startsWith('//')) {
+    //             console.log('This link is a subpath.: ', href);
+    //         }
+    //       }
+    //       })
+    //       .catch(error => {
+    //         console.error(`Axios Error for ${href}:`, error.message);
+    //       });
+    //   } else {
+
+    //   }
+    // }
+
+
+    //         }catch(err)
+    //         {
+    //           console.log(err);
+    //         }
+    //       })
+
+
+
+
+    // const fileExt = mime.extension(res.headers['content-type']);
+    // FileSystem.downloadAsync(
+    //   downloadUrl,
+    //   currentDir + '/DL_' + moment().format('DDMMYHmmss') + '.' + fileExt
+    // )
+    //   .then(() => {
+    //     getFiles();
+    //     setDownloadDialogVisible(false);
+    //     handleSetSnack({
+    //       message: 'Download complete',
+    //     });
+    //   })
+    //   .catch((_) => {
+    //     handleSetSnack({
+    //       message: 'Please provide a correct url',
+    //     });
+    //   });
+
+    // .catch((error) =>
+    //   handleSetSnack({
+    //     message: error.message,
+    //   })
+    // );
   };
 
   const toggleSelect = (item: fileItem) => {
@@ -212,9 +523,9 @@ const Browser = ({ route }: IBrowserProps) => {
             let tempfiles: fileItem[] = results.map((file) => {
               const name = file.uri.endsWith('/')
                 ? file.uri
-                    .slice(0, file.uri.length - 1)
-                    .split('/')
-                    .pop()
+                  .slice(0, file.uri.length - 1)
+                  .split('/')
+                  .pop()
                 : file.uri.split('/').pop();
               return Object({
                 ...file,
@@ -238,7 +549,7 @@ const Browser = ({ route }: IBrowserProps) => {
           });
         }
       })
-      .catch((_) => {});
+      .catch((_) => { });
   };
 
   async function createDirectory(name: string) {
@@ -389,7 +700,7 @@ const Browser = ({ route }: IBrowserProps) => {
             to: destination + '/' + file.name,
           });
       });
-      allProgress(transferPromises, (p) => {}).then((_) => {
+      allProgress(transferPromises, (p) => { }).then((_) => {
         setDestinationDialogVisible(false);
         setMoveDir('');
         setMoveOrCopy('');
@@ -403,8 +714,7 @@ const Browser = ({ route }: IBrowserProps) => {
     if (confLen > 0) {
       Alert.alert(
         'Conflicting Files',
-        `The destination folder has ${confLen} ${
-          confLen === 1 ? 'file' : 'files'
+        `The destination folder has ${confLen} ${confLen === 1 ? 'file' : 'files'
         } with the same ${confLen === 1 ? 'name' : 'names'}.`,
         [
           {
@@ -496,32 +806,33 @@ const Browser = ({ route }: IBrowserProps) => {
         numberOfLinesTitle={undefined}
         visible={newFileActionSheet}
         actionItems={[
-          'Camera Roll',
-          'Multi Image Picker',
-          'Import File from Storage',
           'Download',
+          'Add server',
           'Cancel',
         ]}
         itemIcons={[
-          'camera',
-          'image',
           'drive-file-move-outline',
           'file-download',
           'close',
         ]}
         onClose={setNewFileActionSheet}
         onItemPressed={(buttonIndex) => {
+          // if (buttonIndex === 0) {
+          //   pickImage();
+          // } else if (buttonIndex === 1) {
+          //   setMultiImageVisible(true);
+          // } else if (buttonIndex === 2) {
+          //   pickDocument();
           if (buttonIndex === 0) {
-            pickImage();
-          } else if (buttonIndex === 1) {
-            setMultiImageVisible(true);
-          } else if (buttonIndex === 2) {
-            pickDocument();
-          } else if (buttonIndex === 3) {
             setDownloadDialogVisible(true);
           }
+          else if (buttonIndex === 1) {
+            setDownloadDialogVisibleForServer(true);
+          }
+
+
         }}
-        cancelButtonIndex={4}
+        cancelButtonIndex={2}
         modalStyle={{ backgroundColor: colors.background2 }}
         itemTextStyle={{ color: colors.text }}
         titleStyle={{ color: colors.secondary }}
@@ -545,6 +856,12 @@ const Browser = ({ route }: IBrowserProps) => {
         visible={downloadDialogVisible}
         handleDownload={handleDownload}
         setDownloadDialog={setDownloadDialogVisible}
+      />
+
+      <ServerDialog
+        visible={downloadDialogVisibleForServer}
+        handleServer={handleServer}
+        setDownloadDialog={setDownloadDialogVisibleForServer}
       />
       <Dialog.Container visible={renameDialogVisible}>
         <Dialog.Title style={{ color: 'black' }}>Rename file</Dialog.Title>
@@ -637,6 +954,26 @@ const Browser = ({ route }: IBrowserProps) => {
           keyExtractor={_keyExtractor}
         />
       </View>
+
+      {/* {videoLinks.length > 0 && (
+        <View >
+          <Text>
+            Video Links:
+          </Text>
+          {videoLinks.map((link, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => {
+                // Add your logic to handle the click on the video link
+                console.log('Clicked on video link:', link);
+              }}
+            >
+              <Text>{link}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )} */}
+
       {multiSelect && (
         <View
           style={{ ...styles.bottomMenu, backgroundColor: colors.background }}

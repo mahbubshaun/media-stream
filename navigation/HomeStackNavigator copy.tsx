@@ -11,37 +11,38 @@ import MovieDetails from "../screens/pages/movie-details";
 import GenreMovies from "../screens/pages/movie-genre";
 import PlayMovie from "../screens/pages/play-movie";
 import Trailers from "../screens/pages/trailer";
+import SearchScreen from "../screens/SearchScreen";
 
-type HomeStackParamList = {
+type StackParamList = {
   Browser: { folderName: string; prevDir: string };
   ImageGalleryView: { folderName: string; prevDir: string };
   VideoPlayer: { folderName: string; prevDir: string };
   MiscFileView: { folderName: string; prevDir: string };
 };
 
-const HomeStack = createStackNavigator<HomeStackParamList>();
+const Stack = createStackNavigator();
 
-const HomeStackNavigatorTest: React.FC = () => {
+const StackNavigatorTest: React.FC = () => {
   return (
-    <HomeStack.Navigator
+    <Stack.Navigator
       initialRouteName="Movies"
       screenOptions={{
         headerShown: false,
       }}
     >
-      <HomeStack.Screen
+      <Stack.Screen
         name="Movies"
-        options={({ route }) => ({
-          title: route?.params?.folderName || 'File Manager',
-        })}
+        // options={({ route }) => ({
+        //   title: route?.params?.folderName || 'File Manager',
+        // })}
         component={Movies}
       />
-      <HomeStack.Screen
+      <Stack.Screen
         name="Details"
 
         component={MovieDetails}
       />
-      <HomeStack.Screen
+      <Stack.Screen
         name="List"
         // options={({ route }) => ({
         //   title: route?.params?.prevDir.split('/').pop() || 'Video',
@@ -49,7 +50,7 @@ const HomeStackNavigatorTest: React.FC = () => {
         // })}
         component={GenreMovies}
       />
-      <HomeStack.Screen
+      <Stack.Screen
         name="Movie"
         // options={({ route }) => ({
         //   title: route?.params?.prevDir.split('/').pop() || 'File View',
@@ -57,7 +58,7 @@ const HomeStackNavigatorTest: React.FC = () => {
         // })}
         component={PlayMovie}
       />
-      <HomeStack.Screen
+      <Stack.Screen
         name="Trailer"
         // options={({ route }) => ({
         //   title: route?.params?.prevDir.split('/').pop() || 'File View',
@@ -66,8 +67,9 @@ const HomeStackNavigatorTest: React.FC = () => {
         component={Trailers}
       />
       
-    </HomeStack.Navigator>
+      
+    </Stack.Navigator>
   );
 };
 
-export default HomeStackNavigatorTest;
+export default StackNavigatorTest;

@@ -20,6 +20,7 @@ import VLCPlayerView from './VLCPlayerView';
 import PropTypes from 'prop-types';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { getStatusBarHeight } from './SizeController';
+import Orientation from 'react-native-orientation-locker';
 const statusBarHeight = getStatusBarHeight();
 const _fullKey = 'commonVideo_android_fullKey';
 let deviceHeight = Dimensions.get('window').height;
@@ -96,6 +97,29 @@ export default class CommonVideo extends Component {
     onReplayPress: PropTypes.func,
   };
 
+  _onOrientationDidChange = (orientation) => {
+    if (orientation == 'LANDSCAPE-LEFT') {
+      //do something with landscape left layout
+    } else {
+      //do something with portrait layout
+    }
+  };
+
+  
+  componentWillMount() {
+    //The getOrientation method is async. It happens sometimes that
+    //you need the orientation at the moment the js starts running on device.
+    //getInitialOrientation returns directly because its a constant set at the
+    //beginning of the js code.
+    var initial = Orientation.getInitialOrientation();
+    Orientation.lockToPortrait();
+    if (initial === 'PORTRAIT') {
+      //do stuff
+    } else {
+      //do other stuff
+    }
+  }
+
   onPressButton = () => {
     // Get the callback from props
     const { onCallback } = this.props;
@@ -128,6 +152,9 @@ export default class CommonVideo extends Component {
 
 
   componentDidUpdate(prevProps, prevState) {
+
+    
+
     if (this.props.url !== prevState.storeUrl && this._componentMounted) {
       this.setState({
         storeUrl: this.props.url,
@@ -137,6 +164,28 @@ export default class CommonVideo extends Component {
   }
 
   componentDidMount() {
+
+    Orientation.getAutoRotateState((rotationLock) => this.setState({rotationLock}));
+    //this allows to check if the system autolock is enabled or not.
+
+    Orientation.lockToPortrait(); //this will lock the view to Portrait
+    //Orientation.lockToLandscapeLeft(); //this will lock the view to Landscape
+    //Orientation.unlockAllOrientations(); //this will unlock the view to all Orientations
+
+    //get current UI orientation
+    /*
+    Orientation.getOrientation((orientation)=> {
+      console.log("Current UI Orientation: ", orientation);
+    });
+
+    //get current device orientation
+    Orientation.getDeviceOrientation((deviceOrientation)=> {
+      console.log("Current Device Orientation: ", deviceOrientation);
+    });
+    */
+
+    Orientation.addOrientationListener(this._onOrientationDidChange);
+
     this._componentMounted = true
     StatusBar.setBarStyle("light-content");
     let { style, isGG } = this.props;
@@ -154,8 +203,23 @@ export default class CommonVideo extends Component {
       this._toFullScreen();
     }
   }
-
+  // componentWillMount() {
+  //   //The getOrientation method is async. It happens sometimes that
+  //   //you need the orientation at the moment the js starts running on device.
+  //   //getInitialOrientation returns directly because its a constant set at the
+  //   //beginning of the js code.
+  //   var initial = Orientation.getInitialOrientation();
+  //   console.log('initial value');
+  //   console.log(initial);
+  //   if (initial === 'PORTRAIT') {
+  //     //do stuff
+  //   } else {
+  //     //do other stuff
+  //   }
+  // }
   componentWillUnmount() {
+    Orientation.removeOrientationListener(this._onOrientationDidChange);
+
     this._componentMounted = false;
 
     let { isFull } = this.props;
@@ -165,27 +229,49 @@ export default class CommonVideo extends Component {
   }
 
   _closeFullScreen = () => {
-    let { closeFullScreen, BackHandle, Orientation } = this.props;
-    if (this._componentMounted) {
-      this.setState({ isFull: false, currentVideoAspectRatio: deviceWidth + ":" + this.initialHeight, });
-    }
+    let { closeFullScreen, BackHandle } = this.props;
+    // if (this._componentMounted) {
+    //   this.setState({ isFull: false, currentVideoAspectRatio: deviceWidth + ":" + this.initialHeight, });
+    // }
+    this.setState({ isFull: false });
     BackHandle && BackHandle.removeBackFunction(_fullKey);
-    Orientation && Orientation.lockToPortrait;
     StatusBar.setHidden(false);
+    Orientation.lockToPortrait();
     //StatusBar.setTranslucent(false);
-    this._componentMounted && closeFullScreen && closeFullScreen();
+    // this._componentMounted && closeFullScreen && closeFullScreen();
   };
 
   _toFullScreen = () => {
-    let { startFullScreen, BackHandle, Orientation } = this.props;
-    //StatusBar.setTranslucent(true);
-    console.log('to full screen');
-    console.log(deviceHeight + ":" + deviceWidth);
-    this.setState({ isFull: true, currentVideoAspectRatio: deviceHeight + ":" + deviceWidth });
+    console.log("orientation called");
+    let { BackHandle } = this.props;
     StatusBar.setHidden(true);
+
+    var initial = Orientation.getInitialOrientation();
+    console.log('initial value');
+    console.log(initial);
+    Orientation.lockToLandscapeLeft();
+    this.setState({ isFull: true });
     BackHandle && BackHandle.addBackFunction(_fullKey, this._closeFullScreen);
-    startFullScreen && startFullScreen();
-    Orientation && Orientation.lockToLandscape && Orientation.lockToLandscape;
+    if (initial === 'PORTRAIT') {
+      //do stuff
+      //Orientation.lockToLandscapeLeft();
+      //this.setState({ isFull: true });
+
+     // BackHandle && BackHandle.addBackFunction(_fullKey, this._closeFullScreen);
+     // Orientation.lockToPortrait();
+      //do other stuff
+    }
+    //Orientation.lockToLandscapeLeft;
+    // let { startFullScreen, BackHandle, Orientation } = this.props;
+    // //StatusBar.setTranslucent(true);
+    
+    // startFullScreen && startFullScreen();
+     //Orientation && Orientation.lockToLandscapeLeft && Orientation.lockToLandscapeLeft;
+    // // console.log('to full screen');
+    // // console.log(deviceHeight + ":" + deviceWidth);
+    // // this.setState({ isFull: true, currentVideoAspectRatio: '774.7555555555556' + ":" + '384' });
+    // StatusBar.setHidden(true);
+    // BackHandle && BackHandle.addBackFunction(_fullKey, this._closeFullScreen);
   };
 
   _onLayout = (e) => {
@@ -201,14 +287,14 @@ export default class CommonVideo extends Component {
   }
   
   render() {
-    let { url, ggUrl, showGG, onGGEnd, onEnd, style, height, title, onLeftPress, onLoad, showBack, showTitle, closeFullScreen, videoAspectRatio, fullVideoAspectRatio } = this.props;
+    let { url, pickerData, ggUrl, showGG, onGGEnd, onEnd, style, height, title, onLeftPress, onLoad, showBack, showTitle, closeFullScreen, videoAspectRatio, fullVideoAspectRatio, showRightButton } = this.props;
     let { isEndGG, isFull, currentUrl } = this.state;
     let currentVideoAspectRatio = '';
-    if (isFull) {
-      currentVideoAspectRatio = fullVideoAspectRatio;
-    } else {
-      currentVideoAspectRatio = videoAspectRatio;
-    }
+    // if (isFull) {
+    //   currentVideoAspectRatio = fullVideoAspectRatio;
+    // } else {
+    //   currentVideoAspectRatio = videoAspectRatio;
+    // }
     if (!currentVideoAspectRatio) {
       let { width, height } = this.state;
       currentVideoAspectRatio = this.state.currentVideoAspectRatio;
@@ -245,12 +331,12 @@ export default class CommonVideo extends Component {
     return (
       <View
         //onLayout={this._onLayout}
-        style={[isFull ? styles.container : { flex: 1, backgroundColor: '#000' }, style]}>
+        style={[false ? styles.container : { flex: 1, backgroundColor: '#000' }, style]}>
         {showTop && <View style={styles.topView}>
           <View style={styles.backBtn}>
             {showBack && <TouchableOpacity
               onPress={() => {
-                if (isFull) {
+                if (false) {
                   closeFullScreen && closeFullScreen();
                 } else {
                   onLeftPress && onLeftPress();
@@ -279,6 +365,7 @@ export default class CommonVideo extends Component {
             isGG={true}
             showBack={showBack}
             showTitle={showTitle}
+            showRightButton={showRightButton}
             isFull={isFull}
             onEnd={() => {
               onGGEnd && onGGEnd();
@@ -302,8 +389,10 @@ export default class CommonVideo extends Component {
             isFull={isFull}
             showBack={showBack}
             showTitle={showTitle}
+            showRightButton={showRightButton}
             hadGG={true}
             isEndGG={isEndGG}
+            pickerData={pickerData}
             //initPaused={this.state.paused}
             style={showGG && !isEndGG ? { position: 'absolute', zIndex: -1 } : {}}
             source={{ uri: currentUrl, type: type }}

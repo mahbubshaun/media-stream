@@ -28,7 +28,7 @@ function Settings() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.section}>
+      {/* <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
           PREFERENCES
         </Text>
@@ -72,7 +72,87 @@ function Settings() {
             />
           </View>
         </View>
+      </View> */}
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
+          Lists
+        </Text>
+        <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('WatchList', {name: 'WatchList'});
+              }}
+            >
+        <View
+          style={[
+            styles.sectionItem,
+            { backgroundColor: theme.colors.background2 },
+          ]}
+        >
+          
+          <View style={styles.sectionItemLeft}>
+            <Feather
+              name={'bookmark'}
+              size={24}
+              color={theme.colors.primary}
+            />
+          </View>
+          <View style={styles.sectionItemCenter}>
+            <Text
+              style={[styles.sectionItemText, { color: theme.colors.primary }]}
+            >
+              Watchlist
+            </Text>
+          </View>
+          <View style={styles.sectionItemRight}>
+            
+              <Feather
+                name={'chevron-right'}
+                size={24}
+                color={theme.colors.primary}
+              />
+
+          </View>
+         
+        </View>
+        </TouchableOpacity>
+        <TouchableOpacity
+              onPress={() => {
+                navigation.navigate('WatchList', {name: 'HistoryList'});
+              }}
+            >
+        <View
+          style={[
+            styles.sectionItem,
+            { backgroundColor: theme.colors.background2 },
+          ]}
+        >
+          <View style={styles.sectionItemLeft}>
+          <FontAwesome5 name="history" size={24} color={theme.colors.primary} />
+          </View>
+          <View style={styles.sectionItemCenter}>
+            <Text
+              style={[styles.sectionItemText, { color: theme.colors.primary }]}
+            >
+              History
+            </Text>
+          </View>
+          <View style={styles.sectionItemRight}>
+            
+              <Feather
+                name={'chevron-right'}
+                size={24}
+                color={theme.colors.primary}
+              />
+           
+          </View>
+          
+        </View>
+        </TouchableOpacity>
+       
+
       </View>
+
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: theme.colors.primary }]}>
           SECURITY
@@ -110,7 +190,10 @@ function Settings() {
               />
             </TouchableOpacity>
           </View>
+          
         </View>
+       
+       
         <View
           style={[
             styles.sectionItem,
@@ -167,7 +250,7 @@ export default Settings;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: Constants.statusBarHeight + 20,
+    paddingTop: Constants.statusBarHeight + 40,
   },
   section: {
     width: SIZE,

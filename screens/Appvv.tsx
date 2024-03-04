@@ -26,7 +26,7 @@ import {
 } from 'react-native/Libraries/NewAppScreen';
 import { VLCPlayer , VlCPlayerView} from './react-native-vlc-media-player';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import Orientation from 'react-native-orientation';
+// import Orientation from 'react-native-orientation';
 import { setTabbarVisible } from '../features/files/tabbarStyleSlice';
 
 const calcVLCPlayerHeight = (windowWidth,aspetRatio) => {
@@ -37,6 +37,14 @@ const calcVLCPlayerHeight = (windowWidth,aspetRatio) => {
 const { width, height } = Dimensions.get('window');
 const App: ({}) =>  React$Node = (props) => {
   const dispatch = useAppDispatch();
+  const [someValue, setSomeValue] = useState(null);
+  const [pickerData, setPickerData] = useState(null); 
+  const [dataReceived, setDataReceived] = useState(false); // Flag to track if data is received
+  // Function to handle the data from onLoad in App component
+  const handleSomeOtherFunction = (data) => {
+    // Do something with the data
+    setSomeValue(data);
+  };
 
   useEffect(() => {
     dispatch(setTabbarVisible(false));
@@ -50,6 +58,8 @@ const App: ({}) =>  React$Node = (props) => {
   useEffect(() => {
     const updateScreenDimensions = () => {
       setScreenDimensions(Dimensions.get('window'));
+      console.log(Dimensions.get('window').width);
+      console.log(Dimensions.get('window').height);
     };
 
     // Event listener to update dimensions on orientation change
@@ -78,6 +88,14 @@ const App: ({}) =>  React$Node = (props) => {
     // Do something with the data from onLoad callback
     console.log('Video loaded:', data);
     // You can perform any other actions with the data here
+    if (!dataReceived) {
+      // Do something with the data if needed
+      // For example, update the state with the received data
+      setPickerData(data);
+      setDataReceived(true); // Set the flag to true so that data won't be updated again
+    }
+  
+    
   };
   return (
     <>
@@ -127,13 +145,16 @@ const App: ({}) =>  React$Node = (props) => {
           showControls ={true}
           showSlider = {true}
           showLeftButton={false}
-          showRightButton={false}
+          showRightButton={true}
           title={titleName}
           autoAspectRatio={true}
           resizeMode="cover" 
           showTitle={true}
-          // Orientation={Orientation}
-          onLoad={handleVideoLoad} // Pass the callback function as a prop      
+
+          //Orientation={Orientation}
+           // Pass the callback function as a prop  
+          onLoad={handleVideoLoad}    
+          pickerData={pickerData}
           onLeftPress={()=>{handleConditionMet();}}    
           
           

@@ -6,6 +6,7 @@ import ImageGalleryView from '../screens/ImageGalleryView';
 import MiscFileView from '../screens/MiscFileView';
 import Browser from '../screens/Browser';
 import VideoPlayer from '../screens/VideoPlayer';
+import VideoListScreen from '../screens/test';
 
 type HomeStackParamList = {
   Browser: { folderName: string; prevDir: string };
