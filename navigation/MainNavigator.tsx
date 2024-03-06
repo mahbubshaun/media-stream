@@ -72,10 +72,8 @@ export const MainNavigator: React.FC = (navigation) => {
       })}
     >
       <Tab.Screen name="Home" component={StackNavigatorTest} options={{headerShown: false}}/>
-      {/* <Tab.Screen name="History" component={Watchlist} options={{headerShown: false}} /> */}
       <Tab.Screen name="Web" component={Web} />
       <Tab.Screen name="Server" component={HomeStackNavigator} />
-      {/* <Tab.Screen name="FileTransfer" component={Setting} /> */}
       <Tab.Screen name="Settings" component={SettingsStackNavigator} />
       {/* <Tab.Screen name="Login" component={LoginScreen} />
       <Tab.Screen name="Signup" component={SignupScreen} /> */}
