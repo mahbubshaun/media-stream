@@ -29,7 +29,7 @@ Here are some other features:
 </div>
 
 <div align="center">
-  [![SUvJH.gif](https://s9.gifyu.com/images/SUvJH.gif)
+  [!SUvJH.gif](https://s9.gifyu.com/images/SUvJH.gif)
 </div>
 
 
