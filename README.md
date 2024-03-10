@@ -29,7 +29,7 @@ Here are some other features:
 </div>
 
 <div align="center">
-  ![Animated GIF]([images/your-gif.gif](https://github.com/mahbubshaun/media-stream/blob/main/screenshots/features.gif))
+  ![Animated GIF](https://github.com/mahbubshaun/media-stream/blob/main/screenshots/features.gif)
 </div>
 </br>
 
