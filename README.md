@@ -29,7 +29,7 @@ Here are some other features:
 </div>
 
 <div align="center">
-<img src="https://github.com/Voyz/voyz_public/blob/master/databay_promo_vidA_gif_A03.gif" alt="Databay showcase gif" title="Databay showcase gif" width="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/features.gif" alt="Gif showcase gif" title="Media Stream features video gif" width="500"/>
 </div>
 
 
