@@ -30,6 +30,5 @@ Here are some other features:
 
 <div align="center">
 </div>
-![Alt Text](http://i.imgur.com/OUkLi.gif)
-</br>
+<img src="https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif" width="40" height="40" />
 
