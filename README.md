@@ -30,5 +30,5 @@ Here are some other features:
 
 <div align="center">
 </div>
-<img src="https://s9.gifyu.com/images/SUvJH.gif"  />
+[![SUvJH.gif](https://s9.gifyu.com/images/SUvJH.gif)](https://gifyu.com/image/SUvJH)
 
