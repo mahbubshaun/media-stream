@@ -30,6 +30,7 @@ Here are some other features:
 
 <div align="center">
 </div>
+![Alt Text](https://github.com/mahbubshaun/media-stream/blob/main/screenshots/features.gif)
   ![Animated GIF](https://github.com/mahbubshaun/media-stream/blob/main/screenshots/features.gif)
 </br>
 
