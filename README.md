@@ -29,7 +29,7 @@ Here are some other features:
 </div>
 
 <div align="center">
-<img src="https://github.com/mahbubshaun/media-stream/tree/main/screenshots/features.gif" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/features.gif" height="500"/>
 </div>
 </br>
 
