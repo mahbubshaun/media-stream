@@ -29,7 +29,7 @@ Here are some other features:
 </div>
 
 <div align="center">
-<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/features.gif" alt="Gif showcase gif" title="Media Stream features video gif" width="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/features.gif" alt="Gif showcase gif" title="Media Stream features video gif" width="250"/>
 </div>
 
 
