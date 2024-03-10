@@ -30,5 +30,5 @@ Here are some other features:
 
 <div align="center">
 </div>
-<img src="https://github.com/mahbubshaun/media-stream/tree/main/screenshots/features.gif"  />
+<img src="https://s9.gifyu.com/images/SUvJH.gif"  />
 
