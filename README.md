@@ -24,7 +24,7 @@ Here are overview of the features:
 * Passcode protection
 * Unlock with biometrics
 
-div align="center">
+<div align="center">
   <h2 align="center">Screenshots</h2>
 </div>
 
