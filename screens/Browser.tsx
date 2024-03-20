@@ -8,11 +8,11 @@ import {
   Alert,
   BackHandler,
   TextInput,
-  Text
+  Text,
 } from 'react-native';
 
 import Dialog from 'react-native-dialog';
-import ptn from 'parse-torrent-name'
+import ptn from 'parse-torrent-name';
 import {
   Dialog as GalleryDialog,
   ProgressDialog,
@@ -50,7 +50,8 @@ import { setSnack, snackActionPayload } from '../features/files/snackbarSlice';
 import { HEIGHT, imageFormats, reExt, SIZE } from '../utils/Constants';
 import DOMParser from 'react-native-html-parser';
 import RNFS from 'react-native-fs';
-import { Storage } from "../components/Storage";
+import { Storage } from '../components/Storage';
+import { encode as base64Encode } from 'base-64';
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -71,7 +72,8 @@ const Browser = ({ route }: IBrowserProps) => {
   const [selectedFiles, setSelectedFiles] = useState<fileItem[]>([]);
   const [folderDialogVisible, setFolderDialogVisible] = useState(false);
   const [downloadDialogVisible, setDownloadDialogVisible] = useState(false);
-  const [downloadDialogVisibleForServer, setDownloadDialogVisibleForServer] = useState(false);
+  const [downloadDialogVisibleForServer, setDownloadDialogVisibleForServer] =
+    useState(false);
   const [renameDialogVisible, setRenameDialogVisible] = useState(false);
   const [newFileName, setNewFileName] = useState('');
   const [renamingFile, setRenamingFile] = useState<fileItem>();
@@ -84,10 +86,10 @@ const Browser = ({ route }: IBrowserProps) => {
   const [moveOrCopy, setMoveOrCopy] = useState('');
   const { multiSelect, allSelected } = useSelectionChange(files);
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
-  const linkListString = Storage.getString("linklist");
+  const linkListString = Storage.getString('linklist');
   const linkList = linkListString ? JSON.parse(linkListString) : {};
 
-  let videoArray = []
+  let videoArray = [];
   let parser = '';
   let parsed = '';
   parser = new DOMParser.DOMParser();
@@ -128,7 +130,6 @@ const Browser = ({ route }: IBrowserProps) => {
     return () => backHandler.remove();
   }, []);
 
-
   function extractMediaName(url) {
     const match = url.match(/\/([^/]+)\.\w+$/);
 
@@ -138,10 +139,8 @@ const Browser = ({ route }: IBrowserProps) => {
     }
 
     // Return a default value or handle unrecognized URLs
-    return "Unknown";
+    return 'Unknown';
   }
-
-
 
   const renderItem = ({ item }: { item: fileItem }) => (
     <FileItem
@@ -157,7 +156,7 @@ const Browser = ({ route }: IBrowserProps) => {
       setNewFileName={setNewFileName}
     ></FileItem>
   );
-  const IDOMParser = require("advanced-html-parser");
+  const IDOMParser = require('advanced-html-parser');
 
   const handleDownload = (downloadUrl: string) => {
     axios
@@ -192,6 +191,9 @@ const Browser = ({ route }: IBrowserProps) => {
   let baseUrl; // Variable to store the base URL
   const accessedSet = new Set();
   let serverUrl = '';
+  let serverUsername = '';
+  let serverPassword = '';
+  let credentials = '';
   async function findValidVideoLink(url) {
     if (requestCounter >= maxRequests) {
       console.log('Maximum request limit reached. Stopping further requests.');
@@ -202,7 +204,11 @@ const Browser = ({ route }: IBrowserProps) => {
 
     if (!url.match(/\.[a-z0-9]+$/i)) {
       try {
-        const response = await axios.get(url);
+        const response = await axios.get(url, {
+          headers: {
+            Authorization: `Basic ${credentials}`,
+          },
+        });
         // console.log(response.data);
 
         let doc;
@@ -225,18 +231,28 @@ const Browser = ({ route }: IBrowserProps) => {
           let href = aElements[i].getAttribute('href');
           console.log('link found ', href);
           console.log(href);
+          let subpathUrl = '';
+          if (href == '/') {
+            continue;
+          }
           if (href) {
-          if(href.startsWith('/'))
-            {
-              if (url.endsWith('/')) {
-                url = url.slice(0, -1);
-            }
+            if (href.startsWith('/')) {
+              //   if (url.endsWith('/')) {
+              //     url = url.slice(0, -1);
+              // }
+              subpathUrl = baseUrl + href;
+            } else {
+              console.log('url ', url);
+              subpathUrl = url + href;
             }
           }
-
-          let subpathUrl = baseUrl + href;
           console.log('subpath url: ', subpathUrl);
-   
+
+          if (accessedSet.has(subpathUrl)) {
+            console.log('Already accessed');
+            continue;
+          } else {
+          }
 
           const isSub = await isSubPath(baseUrl, subpathUrl);
           // if (href && href.startsWith('/') && !href.startsWith('//')) {
@@ -263,7 +279,6 @@ const Browser = ({ route }: IBrowserProps) => {
                 let currentPath = docDir + '/' + domain;
 
                 try {
-
                   FileSystem.makeDirectoryAsync(currentPath);
 
                   for (const folderName of folderNames) {
@@ -271,9 +286,7 @@ const Browser = ({ route }: IBrowserProps) => {
                     try {
                       console.log('Creating directory:', currentPath);
                       FileSystem.makeDirectoryAsync(currentPath);
-                    } catch (err) {
-
-                    }
+                    } catch (err) {}
                   }
                 } catch (err) {
                   console.log(err);
@@ -281,7 +294,24 @@ const Browser = ({ route }: IBrowserProps) => {
 
                 // Writing dummy MP4 file
                 getFiles();
-                const fileContent = `Click this link: ${subpathUrl}`;
+                let final_subpath_with_authentication = '';
+                if (serverUsername) {
+                  let subpath_array = subpathUrl.split('//');
+                  console.log(subpath_array[0]);
+                  console.log(subpath_array[1]);
+                  final_subpath_with_authentication =
+                    subpath_array[0] +
+                    '//' +
+                    serverUsername +
+                    ':' +
+                    serverPassword +
+                    '@' +
+                    subpath_array[1];
+                } else {
+                  final_subpath_with_authentication = subpathUrl;
+                }
+                console.log(final_subpath_with_authentication);
+                const fileContent = `Click this link: ${final_subpath_with_authentication}`;
                 currentPath += '/' + 'medialink.txt';
 
                 try {
@@ -296,12 +326,8 @@ const Browser = ({ route }: IBrowserProps) => {
                 // if (await isValidVideoLink(subpathUrl))
                 // {
 
-
-
                 // }
                 videoArray.push(subpathUrl);
-
-
               }
 
               // Increment the request counter
@@ -309,23 +335,18 @@ const Browser = ({ route }: IBrowserProps) => {
               console.log('Request counter:', requestCounter);
 
               // Recursive call to continue searching in the subpath
-
             } else {
-              console.log('Not valid:', subpathUrl);
-              if (accessedSet.has(subpathUrl)) {
-                console.log("Already accessed");
-                continue;
-              } else {
+              console.log('Not valid:', href);
+              if (subpathUrl.endsWith('/')) {
                 accessedSet.add(subpathUrl);
-                // await findValidVideoLink(subpathUrl);
-
+                await findValidVideoLink(subpathUrl);
               }
-
             }
+
             // await findValidVideoLink(subpathUrl);
           } else {
             console.log('does not meet condition', subpathUrl);
-            console.log(subpathUrl.startsWith("http://" + baseUrl));
+            console.log(subpathUrl.startsWith('http://' + baseUrl));
             console.log(baseUrl);
           }
           // await findValidVideoLink(subpathUrl);
@@ -334,7 +355,7 @@ const Browser = ({ route }: IBrowserProps) => {
         console.error('Error during findValidVideoLink:', error);
       }
     } else {
-      console.log("URL should not end with a file extension");
+      console.log('URL should not end with a file extension');
     }
   }
 
@@ -352,16 +373,27 @@ const Browser = ({ route }: IBrowserProps) => {
     return href.endsWith('.mp4') || href.endsWith('.mkv');
   }
 
-
-  const handleServer = async (downloadUrl: string) => {
-
+  const handleServer = async (downloadUrl: string, serverAuth: string) => {
     if (!baseUrl) {
       const matches = downloadUrl.match(/^(https?:\/\/[^/]+)/);
       baseUrl = matches && matches[1];
       console.log('Base URL:', baseUrl);
     }
-    console.log('server ur got', downloadUrl);
+    let auth_array = serverAuth.split(':');
+    let username = auth_array[0];
+    let password = auth_array[1];
+    console.log('server url', downloadUrl);
+    console.log('server password', username, password);
     serverUrl = downloadUrl;
+    serverUsername = username;
+    serverPassword = password;
+    try {
+      credentials = base64Encode(`${username}:${password}`);
+      console.log(credentials);
+    } catch (err) {
+      console.log(err);
+    }
+
     setImportProgressVisible(true); // Set visibility to true when starting the process
 
     try {
@@ -384,16 +416,13 @@ const Browser = ({ route }: IBrowserProps) => {
       console.log(title);
       Object.assign(linkList, {
         [title]: {
-          'media_link': videoArray[i],
-          'title': title
-
+          media_link: videoArray[i],
+          title: title,
         },
       });
-
     }
     // console.log('saving found media links: ', JSON.stringify(linkList));
-    Storage.set("linklist", JSON.stringify(linkList));
-
+    Storage.set('linklist', JSON.stringify(linkList));
 
     //     axios
     //       .get(downloadUrl)
@@ -402,7 +431,6 @@ const Browser = ({ route }: IBrowserProps) => {
     //         try{
     //         const parser = new DOMParser.DOMParser();
     //         const parsed = parser.parseFromString(res.data, 'text/html');
-
 
     //         const aElements = parsed.getElementsByTagName('a');
     // for (let i = 0; i < aElements.length; i++) {
@@ -415,7 +443,6 @@ const Browser = ({ route }: IBrowserProps) => {
     //       .then(response => {
     //         console.log(`Axios Response for ${href}:`, response.data);
     //         const parsed = parser.parseFromString(response.data, 'text/html');
-
 
     //         const aElements = parsed.getElementsByTagName('a');
     //         for (let i = 0; i < aElements.length; i++) {
@@ -435,15 +462,11 @@ const Browser = ({ route }: IBrowserProps) => {
     //   }
     // }
 
-
     //         }catch(err)
     //         {
     //           console.log(err);
     //         }
     //       })
-
-
-
 
     // const fileExt = mime.extension(res.headers['content-type']);
     // FileSystem.downloadAsync(
@@ -523,9 +546,9 @@ const Browser = ({ route }: IBrowserProps) => {
             let tempfiles: fileItem[] = results.map((file) => {
               const name = file.uri.endsWith('/')
                 ? file.uri
-                  .slice(0, file.uri.length - 1)
-                  .split('/')
-                  .pop()
+                    .slice(0, file.uri.length - 1)
+                    .split('/')
+                    .pop()
                 : file.uri.split('/').pop();
               return Object({
                 ...file,
@@ -549,7 +572,7 @@ const Browser = ({ route }: IBrowserProps) => {
           });
         }
       })
-      .catch((_) => { });
+      .catch((_) => {});
   };
 
   async function createDirectory(name: string) {
@@ -700,7 +723,7 @@ const Browser = ({ route }: IBrowserProps) => {
             to: destination + '/' + file.name,
           });
       });
-      allProgress(transferPromises, (p) => { }).then((_) => {
+      allProgress(transferPromises, (p) => {}).then((_) => {
         setDestinationDialogVisible(false);
         setMoveDir('');
         setMoveOrCopy('');
@@ -714,7 +737,8 @@ const Browser = ({ route }: IBrowserProps) => {
     if (confLen > 0) {
       Alert.alert(
         'Conflicting Files',
-        `The destination folder has ${confLen} ${confLen === 1 ? 'file' : 'files'
+        `The destination folder has ${confLen} ${
+          confLen === 1 ? 'file' : 'files'
         } with the same ${confLen === 1 ? 'name' : 'names'}.`,
         [
           {
@@ -805,16 +829,8 @@ const Browser = ({ route }: IBrowserProps) => {
         title={'Add a new file'}
         numberOfLinesTitle={undefined}
         visible={newFileActionSheet}
-        actionItems={[
-          'Download',
-          'Add server',
-          'Cancel',
-        ]}
-        itemIcons={[
-          'drive-file-move-outline',
-          'file-download',
-          'close',
-        ]}
+        actionItems={['Download', 'Add server', 'Cancel']}
+        itemIcons={['drive-file-move-outline', 'file-download', 'close']}
         onClose={setNewFileActionSheet}
         onItemPressed={(buttonIndex) => {
           // if (buttonIndex === 0) {
@@ -825,12 +841,9 @@ const Browser = ({ route }: IBrowserProps) => {
           //   pickDocument();
           if (buttonIndex === 0) {
             setDownloadDialogVisible(true);
-          }
-          else if (buttonIndex === 1) {
+          } else if (buttonIndex === 1) {
             setDownloadDialogVisibleForServer(true);
           }
-
-
         }}
         cancelButtonIndex={2}
         modalStyle={{ backgroundColor: colors.background2 }}

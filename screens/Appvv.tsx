@@ -14,7 +14,7 @@ import {
   View,
   Text,
   StatusBar,
-  Dimensions 
+  Dimensions,
 } from 'react-native';
 
 import {
@@ -24,21 +24,20 @@ import {
   DebugInstructions,
   ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
-import { VLCPlayer , VlCPlayerView} from './react-native-vlc-media-player';
+import { VLCPlayer, VlCPlayerView } from './react-native-vlc-media-player';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 // import Orientation from 'react-native-orientation';
 import { setTabbarVisible } from '../features/files/tabbarStyleSlice';
 
-const calcVLCPlayerHeight = (windowWidth,aspetRatio) => {
+const calcVLCPlayerHeight = (windowWidth, aspetRatio) => {
   return windowWidth * aspetRatio;
 };
 
-
 const { width, height } = Dimensions.get('window');
-const App: ({}) =>  React$Node = (props) => {
+const App: ({}) => React$Node = (props) => {
   const dispatch = useAppDispatch();
   const [someValue, setSomeValue] = useState(null);
-  const [pickerData, setPickerData] = useState(null); 
+  const [pickerData, setPickerData] = useState(null);
   const [dataReceived, setDataReceived] = useState(false); // Flag to track if data is received
   // Function to handle the data from onLoad in App component
   const handleSomeOtherFunction = (data) => {
@@ -53,8 +52,10 @@ const App: ({}) =>  React$Node = (props) => {
       dispatch(setTabbarVisible(true));
     };
   }, []);
-  const [screenDimensions, setScreenDimensions] = useState(Dimensions.get('window'));
- 
+  const [screenDimensions, setScreenDimensions] = useState(
+    Dimensions.get('window')
+  );
+
   useEffect(() => {
     const updateScreenDimensions = () => {
       setScreenDimensions(Dimensions.get('window'));
@@ -70,9 +71,7 @@ const App: ({}) =>  React$Node = (props) => {
       Dimensions.removeEventListener('change', updateScreenDimensions);
     };
   }, []);
-  const { videoUri, showWebViewAgain, titleName} = props;
-
-
+  const { videoUri, showWebViewAgain, titleName } = props;
 
   // Function to handle the condition that triggers showing the WebView again
   const handleConditionMet = () => {
@@ -82,7 +81,6 @@ const App: ({}) =>  React$Node = (props) => {
     // When the condition is met, call the showWebViewAgain function
     showWebViewAgain();
   };
- 
 
   const handleVideoLoad = (data) => {
     // Do something with the data from onLoad callback
@@ -94,24 +92,24 @@ const App: ({}) =>  React$Node = (props) => {
       setPickerData(data);
       setDataReceived(true); // Set the flag to true so that data won't be updated again
     }
-  
-    
   };
   return (
     <>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView >
+      <SafeAreaView>
         <ScrollView
           contentInsetAdjustmentBehavior="automatic"
           // // style={styles.scrollView}>
           // style={{ width, height }}
           // contentContainerStyle={{ flexGrow: 1 }}>
-          style={[styles.scrollView, { width: screenDimensions.width, height: screenDimensions.height }]}
-          contentContainerStyle={styles.scrollViewContent}>
-
-
-         <View style={styles.container}>
-          {/* <VLCPlayer
+          style={[
+            styles.scrollView,
+            { width: screenDimensions.width, height: screenDimensions.height },
+          ]}
+          contentContainerStyle={styles.scrollViewContent}
+        >
+          <View style={styles.container}>
+            {/* <VLCPlayer
             source={{
               initType: 2,
               hwDecoderEnabled: 1,
@@ -137,29 +135,27 @@ const App: ({}) =>  React$Node = (props) => {
             style={{ height: calcVLCPlayerHeight( Dimensions.get('window').width, 3/4), marginTop: 30}}
             enableControls={true}
           /> */}
-          {/* <View style={{ width: 100%, height: 800, backgroundColor: 'red' }} /> */}
-          <VlCPlayerView
-          url={videoUri}
-          ggUrl={videoUri}
-          autoplay={false}
-          showControls ={true}
-          showSlider = {true}
-          showLeftButton={false}
-          showRightButton={true}
-          title={titleName}
-          autoAspectRatio={true}
-          resizeMode="cover" 
-          showTitle={true}
-
-          //Orientation={Orientation}
-           // Pass the callback function as a prop  
-          onLoad={handleVideoLoad}    
-          pickerData={pickerData}
-          onLeftPress={()=>{handleConditionMet();}}    
-          
-          
-          
-       />
+            {/* <View style={{ width: 100%, height: 800, backgroundColor: 'red' }} /> */}
+            <VlCPlayerView
+              url={videoUri}
+              ggUrl={videoUri}
+              autoplay={false}
+              showControls={true}
+              showSlider={true}
+              showLeftButton={false}
+              showRightButton={true}
+              title={titleName}
+              autoAspectRatio={true}
+              resizeMode="cover"
+              showTitle={true}
+              //Orientation={Orientation}
+              // Pass the callback function as a prop
+              onLoad={handleVideoLoad}
+              pickerData={pickerData}
+              onLeftPress={() => {
+                handleConditionMet();
+              }}
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -171,10 +167,10 @@ const styles = StyleSheet.create({
   // scrollView: {
   //   flex: 1,
   //   backgroundColor: 'red',
-    
+
   //   // justifyContent: 'center',
   //   // alignItems: 'center',
-    
+
   // },
   // heading:{
   //   fontSize: 30,
@@ -190,7 +186,6 @@ const styles = StyleSheet.create({
   //   // backgroundColor: Colors.white,
   //   flex: 1,
 
-    
   // },
   // sectionContainer: {
   //   marginTop: 10,

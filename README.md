@@ -9,11 +9,11 @@
 
 ## About The Project
 
-With this app you can import/export photos and videos from/to photo gallery and also download files directly from the web. 
+This mobile app, developed with React Native, integrates the LibVLC SDK for seamless media streaming from remote servers, offering users a rich viewing experience. It features a dynamic recommendation system powered by the TMDB API, showcasing trending, popular, and top-rated movies, alongside a diverse genre selection. Users can rate movies, add them to personalized watchlists, and stream content directly if available on their personal servers. Additionally, the app includes a mini-browser for server interaction and media file streaming, enhancing functionality and user engagement. With its focus on intuitive design and user-centric features, the app aims to provide a comprehensive media discovery and streaming solution.
 
 Files managed by the app are kept within app's folder therefore they are not exposed to phone's built-in file manager unless the phone is rooted.
 
-Here are some other features:
+Here are overview of the features:
 
 * Popular, Trendling, Top Rated Movie browsing & Recommendations 
 * Watch trailer, movie details and cast information
