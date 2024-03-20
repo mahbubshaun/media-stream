@@ -24,6 +24,54 @@ Here are overview of the features:
 * Passcode protection
 * Unlock with biometrics
 
+div align="center">
+  <h2 align="center">Screenshots</h2>
+</div>
+
+<div align="center">
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_27.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_28.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_29.png" height="500"/>
+</div>
+</br>
+</br>
+<div align="center">
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_30.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_31.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_32.png" height="500"/>
+</div>
+</br>
+</br>
+<div align="center">
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_33.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_34.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_35.png" height="500"/>
+</div>
+
+<div align="center">
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_36.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_37.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_38.png" height="500"/>
+</div>
+
+<div align="center">
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_39.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_40.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_41.png" height="500"/>
+</div>
+
+<div align="center">
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_42.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_43.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_44.png" height="500"/>
+</div>
+
+<div align="center">
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_45.png" height="500"/>
+<img src="https://github.com/mahbubshaun/media-stream/blob/main/screenshots/Screenshot_46.png" height="500"/>
+
+</div>
+
 <div align="center">
   <h2 align="center">Features Gif</h2>
 </div>
