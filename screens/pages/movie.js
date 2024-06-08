@@ -38,12 +38,19 @@ class Movies extends Component {
       searchQuery: '',
       searchResults: [],
       init: false,
+      
     };
+    
   }
 
   // Function to handle search and fetch data from TMDB API
   searchMovies = async () => {
     const { searchQuery } = this.state;
+    this.setState({
+      init : false      
+      // action: popular.data.results,
+      // adventure: recent.data.results
+    });
     if (searchQuery.trim() === '') {
       // Clear search results if the query is empty
       this.setState({ searchResults: [] });
@@ -68,6 +75,7 @@ class Movies extends Component {
       // Update state with search results
       this.setState({
         searchResults: response.data.results,
+        init : true     
       });
     } catch (error) {
       console.error('Error fetching search results:', error);
@@ -96,7 +104,7 @@ class Movies extends Component {
       .then(
         axios.spread((popular, recent) => {
           this.setState({
-            loaded: true,
+            
             // action: popular.data.results,
             // adventure: recent.data.results
           });
@@ -142,14 +150,42 @@ class Movies extends Component {
             featured: featured.data.results,
             popular: popular.data.results,
             recent: recent.data.results,
+            loaded: true,
             init: true,
+            
           });
+          
+          // this.preloadImages();
+          
         })
       )
       .catch((err) => {
         console.log(err);
       });
   }
+
+  preloadImages() {
+    console.log('preloading');
+    const imageUrls = this.state.featured.map(el => ({
+      uri: `https://image.tmdb.org/t/p/original${el.backdrop_path}`,
+      uri: `https://image.tmdb.org/t/p/w185${el.poster_path}`,
+    }));
+
+    FastImage.preload(imageUrls);
+
+    setTimeout(() => this.setState({
+      loaded: true,
+      init: true,
+      
+    }), 2500);
+    console.log('preloading completed');
+    
+    
+  }
+
+  clearSearch = () => {
+    this.setState({ searchResults: [], searchQuery: '' });
+  };
 
   render() {
     return (
@@ -165,27 +201,30 @@ class Movies extends Component {
             left={
               <TextInput.Icon icon="magnify" iconColor={'rgb(186, 193, 204)'} />
             }
+            right={ 
+              <TextInput.Icon
+                name="close"
+                color={'#000000'}
+                onPress={this.clearSearch}
+              />
+            }
             underlineColor="transparent"
             activeUnderlineColor="transparent"
             cursorColor="black"
             onChangeText={this.handleSearchInputChange}
+            value={this.state.searchQuery}
             onSubmitEditing={this.searchMovies}
             placeholderTextColor={'black'}
           />
-          {/* <Icon
-							name="sliders"
-							size={27}
-							color={"black"}
-							style={{
-								...style.iconStyle,
-								backgroundColor: "rgb(186, 193, 204)",
-								borderColor: 'rgb(170, 207, 202)'
-							}}
-							onPress={() => bottomSheetRef.current.open()}
-						/> */}
         </View>
         {this.state.searchResults.length > 0 && (
+          
           <View style={[style.flexbox, style.border, style.sectionBox]}>
+             <Text
+                style={[movie.heading, { marginLeft: 5, marginBottom: 10 }]}
+              >
+                Search Results
+              </Text>
             <ScrollView horizontal={true} style={style.bothsideOverFlow}>
               <View style={[style.flexboxContainer, { paddingRight: 15 }]}>
                 {this.state.searchResults.map((el, index) => (
@@ -239,7 +278,7 @@ class Movies extends Component {
               height={380}
               index={0}
               autoplay={true}
-              autoplayTimeout={5}
+              autoplayTimeout={10}
               dot={<View style={style.dot} />}
               activeDot={<View style={style.activeDot} />}
             >

@@ -40,7 +40,7 @@ export const ServerDialog = ({
     setSelectedServerType(itemValue)
   }>
   <Picker.Item label="HTTP" value="http"   />
-  <Picker.Item label="FTP" value="ftp"  enabled={false} />
+  <Picker.Item label="FTP (upcoming)" value="ftp"  enabled={false} />
 </Picker>
 
       <Dialog.Input

@@ -15,6 +15,7 @@ import { auth } from './config';
 import { LoadingIndicator } from './components';
 import { useAppDispatch, useAppSelector } from './hooks/reduxHooks';
 import { setLightTheme, setDarkTheme } from './features/files/themeSlice';
+import { AutocompleteDropdownContextProvider } from 'react-native-autocomplete-dropdown';
 
 
 // const App = () => {
@@ -43,11 +44,13 @@ import { setLightTheme, setDarkTheme } from './features/files/themeSlice';
 const App = () => {
   return (
     <Provider store={store}>
+      <AutocompleteDropdownContextProvider>
     <AuthenticatedUserProvider>
       <SafeAreaProvider>
       <Main />
       </SafeAreaProvider>
     </AuthenticatedUserProvider>
+    </AutocompleteDropdownContextProvider>
     </Provider>
   );
 };

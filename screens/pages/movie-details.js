@@ -88,6 +88,8 @@ const MovieDetails = ({ route, navigation }) => {
   const linkList = linkListString ? JSON.parse(linkListString) : {};
   const [showWebViewAgain, setShowWebViewAgain] = useState(true);
   const [videoUrl, setVideoUrl] = useState('');
+  const [title, setTitle] = useState('');
+
   let savedTitle = linkList[details.title]?.title || '';
 
   console.log(stringSimilarity('I.S.S', 'I.S.S.'));
@@ -338,6 +340,7 @@ const MovieDetails = ({ route, navigation }) => {
 
   const handleStream = () => {
     setVideoUrl(linkList[details.title]['media_link']);
+    setTitle(details.title);
     setShowWebViewAgain(false);
   };
 
@@ -346,12 +349,21 @@ const MovieDetails = ({ route, navigation }) => {
     // You can do something with the rating value here
     //setRating(rating);
     console.log(`User rated: ${rating}`);
-    Object.assign(ratinglist, {
-      [details.id]: {
-        rating: rating,
-      },
-    });
-    Storage.set('ratinglist', JSON.stringify(ratinglist));
+   
+    
+      Object.assign(ratinglist, {
+        [details.id]: {
+          media_type: details.media_type,
+          poster_path: details.poster_path,
+          backdrop_path: details.backdrop_path,
+          original_title: details.original_title,
+          vote_average: details.vote_average,
+          overview: details.overview,
+          rating: rating
+        },
+      });
+      Storage.set('ratinglist', JSON.stringify(ratinglist));
+    
   };
 
   return (
@@ -672,7 +684,7 @@ const MovieDetails = ({ route, navigation }) => {
         <App
           videoUri={videoUrl}
           showWebViewAgain={handleShowWebViewAgain}
-          // titleName={name}
+          titleName={title}
         />
       )}
     </>

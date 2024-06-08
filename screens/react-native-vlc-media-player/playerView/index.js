@@ -382,7 +382,7 @@ export default class CommonVideo extends Component {
           <VLCPlayerView
             {...this.props}
             uri={currentUrl}
-            videoAspectRatio={currentVideoAspectRatio}
+            videoAspectRatio={'2.35:1'}
             onLeftPress={onLeftPress}
             title={title}
             type={type}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -52,6 +52,20 @@ import DOMParser from 'react-native-html-parser';
 import RNFS from 'react-native-fs';
 import { Storage } from '../components/Storage';
 import { encode as base64Encode } from 'base-64';
+import {
+  db,
+  collection,
+  addDoc,
+  doc,
+  setDoc,
+  updateDoc,
+  getDoc,
+} from '../config/firebase';
+import { AuthenticatedUserProvider } from '../providers';
+import { AuthenticatedUserContext } from '../providers';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../config';
+
 
 type BrowserParamList = {
   Browser: { prevDir: string; folderName: string };
@@ -88,11 +102,44 @@ const Browser = ({ route }: IBrowserProps) => {
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
   const linkListString = Storage.getString('linklist');
   const linkList = linkListString ? JSON.parse(linkListString) : {};
+  const [mediaCount, setMediaCount] = useState(0);
+  const { user, setUser } = useContext(AuthenticatedUserContext);
 
   let videoArray = [];
   let parser = '';
   let parsed = '';
   parser = new DOMParser.DOMParser();
+
+  let media_count = 0;
+
+  useEffect(() => {
+    // onAuthStateChanged returns an unsubscriber
+    const unsubscribeAuthStateChanged = onAuthStateChanged(
+      auth,
+      (authenticatedUser) => {
+        authenticatedUser ? setUser(authenticatedUser) : setUser(null);
+      }
+    );
+
+    // unsubscribe auth listener on unmount
+    console.log(user);
+    if (user) {
+      console.log('Already logged in!'); // Print something if login succeeds
+    }else{
+      console.log('Not logged in!'); 
+    }
+
+    return unsubscribeAuthStateChanged;
+  }, []);
+  console.log(user);
+
+  if (user) {
+    console.log(user.uid);
+  }
+
+  const incrementMediaCount = () => {
+    setMediaCount(prevCount => prevCount + 1);
+  };
 
   useEffect(() => {
     getFiles();
@@ -199,7 +246,7 @@ const Browser = ({ route }: IBrowserProps) => {
       console.log('Maximum request limit reached. Stopping further requests.');
       return;
     }
-
+    
     console.log('Inside findValidU', url);
 
     if (!url.match(/\.[a-z0-9]+$/i)) {
@@ -265,6 +312,11 @@ const Browser = ({ route }: IBrowserProps) => {
 
             if (isValid) {
               console.log('Found valid video link:', subpathUrl);
+
+              
+              incrementMediaCount();
+
+              
 
               // Extracting domain and folder names
               const urlParts = url.split('/');
@@ -384,6 +436,20 @@ const Browser = ({ route }: IBrowserProps) => {
     let password = auth_array[1];
     console.log('server url', downloadUrl);
     console.log('server password', username, password);
+
+    setMediaCount(0);
+
+    const serverlistString = Storage.getString('serverlist');
+    const serverlist = serverlistString ? JSON.parse(serverlistString) : {};
+    
+    Object.assign(serverlist, {
+      [downloadUrl]: {
+        server_user: username,
+        server_pass: password,
+      },
+    });
+    console.log('saving server url', serverlist);
+    Storage.set('serverlist', JSON.stringify(serverlist));
     serverUrl = downloadUrl;
     serverUsername = username;
     serverPassword = password;
@@ -826,11 +892,11 @@ const Browser = ({ route }: IBrowserProps) => {
   return (
     <View style={{ ...styles.container, backgroundColor: colors.background }}>
       <ActionSheet
-        title={'Add a new file'}
+        title={'Link Your Server'}
         numberOfLinesTitle={undefined}
         visible={newFileActionSheet}
-        actionItems={['Download', 'Add server', 'Cancel']}
-        itemIcons={['drive-file-move-outline', 'file-download', 'close']}
+        actionItems={['Add server', 'Cancel']}
+        itemIcons={['file-download', 'close']}
         onClose={setNewFileActionSheet}
         onItemPressed={(buttonIndex) => {
           // if (buttonIndex === 0) {
@@ -839,9 +905,11 @@ const Browser = ({ route }: IBrowserProps) => {
           //   setMultiImageVisible(true);
           // } else if (buttonIndex === 2) {
           //   pickDocument();
+          // if (buttonIndex === 0) {
+          //   setDownloadDialogVisible(true);
+          // } else 
+          
           if (buttonIndex === 0) {
-            setDownloadDialogVisible(true);
-          } else if (buttonIndex === 1) {
             setDownloadDialogVisibleForServer(true);
           }
         }}
@@ -921,7 +989,7 @@ const Browser = ({ route }: IBrowserProps) => {
       <ProgressDialog
         visible={importProgressVisible}
         title="Importing Assets"
-        message="Please, wait..."
+        message={`Please, wait... \nMedia contents found so far: ${mediaCount}`}
       />
 
       <View style={styles.topButtons}>

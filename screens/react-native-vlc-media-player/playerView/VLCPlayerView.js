@@ -328,6 +328,11 @@ export default class VLCPlayerView extends Component {
     // }
     console.log(event)
     console.log('onPaused');
+    // this.setState(
+    //   {
+    //     paused: true,
+    //     //showControls: true,
+    //   })
   }
   onLoad(event) {
     // if (!this.state.paused) {

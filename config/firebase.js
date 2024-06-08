@@ -1,7 +1,10 @@
-import { initializeApp } from 'firebase/app';
+// import { initializeApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getFirestore } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import { collection, addDoc, doc, setDoc, updateDoc, getDoc } from "firebase/firestore"; 
 
 // add firebase config
 // const firebaseConfig = {
@@ -22,6 +25,13 @@ const firebaseConfig = {
   measurementId: "G-2HG38FSNJ7"
 };
 
+// let app;
+// if (firebase.apps.length === 0) {
+//     app = firebase.initializeApp(firebaseConfig )
+// } else {
+//     app = firebase.app()
+// }
+
 // initialize firebase
 const app = initializeApp(firebaseConfig);
 
@@ -30,4 +40,8 @@ const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage),
 });
 
-export { auth };
+
+// Initialize Cloud Firestore and get a reference to the service
+const db = getFirestore(app)
+
+export { auth , db, collection, addDoc, doc, setDoc, updateDoc, getDoc};

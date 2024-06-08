@@ -1,34 +1,87 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Component, Fragment } from 'react';
+import SearchableDropdown from 'react-native-searchable-dropdown';
 import {
   View,
   StyleSheet,
   TextInput,
   TouchableOpacity,
   Keyboard,
+  Modal,
+  FlatList,
+  Text,
+  SafeAreaView,
   BackHandler,
 } from 'react-native';
 
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
-
+import { Storage } from '../components/Storage';
 import Constants from 'expo-constants';
 import App from './Appvv'; 
 import { useAppSelector } from '../hooks/reduxHooks';
+import { AutocompleteDropdown } from 'react-native-autocomplete-dropdown';
 
+
+
+const items = [
+  { id: 1, name: 'JavaScript' },
+  { id: 2, name: 'Java' },
+  { id: 3, name: 'Ruby' },
+  { id: 4, name: 'React Native' },
+  { id: 5, name: 'PHP' },
+  { id: 6, name: 'Python' },
+  { id: 7, name: 'Go' },
+  { id: 8, name: 'Swift' },
+];
 const Web: React.FC = () => {
+  const [selectedItems, setSelectedItems] = useState([
+    { id: 7, name: 'Go' },
+    { id: 8, name: 'Swift' },
+  ]);
+
+  const handleItemSelect = (item) => {
+    setSelectedItems([...selectedItems, item]);
+  };
+
+  const handleRemoveItem = (item) => {
+    setSelectedItems(selectedItems.filter((sitem) => sitem.id !== item.id));
+  };
+
+  
   const { colors } = useAppSelector((state) => state.theme.theme);
-  const [target, setTarget] = useState('https://google.com/');
-  const [url, setUrl] = useState(target);
   const [videoUrl, setVideoUrl] = useState('');
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingBarVisible, setLoadingBarVisible] = useState(false);
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [isFlatList, setFlatList] = useState(false);
   const browserRef = useRef<WebView>();
   const [receivedData, setReceivedData] = useState(null);
   const [timeoutId, setTimeoutId] = useState(null);
   const [showWebViewAgain, setShowWebViewAgain] = useState(true);
+  const [history, setHistory] = useState('');
+  const historytString = Storage.getString('history');
+  const historyist = historytString ? historytString : "https://google.com";
+  const [target, setTarget] = useState(historyist);
+  const [url, setUrl] = useState(target);
+
+  
+  // Define your list of predetermined URLs
+const predeterminedURLs = [
+  'https://example.com',
+  'https://example.org',
+  'https://example.net',
+];
+const [suggestions, setSuggestions] = useState(predeterminedURLs);
+
+const [modalVisible, setModalVisible] = useState(false);
+const [selectedItem, setSelectedItem] = useState(null);
+
+  const handleUrlSelection = (selectedUrl) => {
+    setUrl(selectedUrl);
+    setModalVisible(false);
+  };
   const initialValues = {
     url: "",
     time: ""
@@ -37,6 +90,11 @@ const Web: React.FC = () => {
   const [data, setData] = useState(initialValues);
 
   useEffect(() => {
+    console.log('saving history url', url);
+    Storage.set('history', url);
+    const historytString = Storage.getString('history');
+    const historyist = historytString ? historytString : "https://google.com";
+    console.log('current history url', historyist);
     const backAction = () => {
       browserRef.current.goBack();
       return true;
@@ -50,16 +108,26 @@ const Web: React.FC = () => {
     return () => backHandler.remove();
   }, []);
 
+  useEffect(() => {
+    console.log('saving history url', url);
+    Storage.set('history', url);
+    const historytString = Storage.getString('history');
+    const historyist = historytString ? historytString : "https://google.com";
+    console.log('current history url', historyist);
+    
+  }, [url]);
+
   const searchEngines = {
     google: (uri: string) => `https://www.google.com/search?q=${uri}`,
   };
 
   function upgradeURL(uri: string, searchEngine = 'google') {
+    console.log('received data in upgrade url', uri);
     const isURL = uri.split(' ').length === 1 && uri.includes('.');
     if (isURL) {
-      if (!uri.startsWith('http')) {
-        return 'https://' + uri;
-      }
+      // if (!uri.startsWith('http')) {
+      //   return 'https://' + uri;
+      // }
       return uri;
     }
     const encodedURI = encodeURI(uri);
@@ -99,6 +167,7 @@ const Web: React.FC = () => {
   const handleShowWebViewAgain = () => {
     setVideoUrl('');
     setShowWebViewAgain(true);
+    setTarget(upgradeURL(url))
 
   };
 
@@ -212,7 +281,13 @@ const findHrefRecursively = (element) => {
   return urlv;
 };
 
-
+// Filter URLs based on input text
+const filterURLs = (text) => {
+  const filteredURLs = predeterminedURLs.filter(url =>
+    url.toLowerCase().includes(text.toLowerCase())
+  );
+  setSuggestions(filteredURLs);
+};
 
 const onMessage =async (payload) => {
   let dataPayload;
@@ -360,8 +435,84 @@ const onMessage =async (payload) => {
   return (
     <>
       {showWebViewAgain ? (
+        <Fragment>
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.searchBar}>
+
+
+<View style={styles.searchBar}>
+        
+
+
+<SearchableDropdown
+        multi={true}
+        selectedItems={selectedItems}
+        onItemSelect={handleItemSelect}
+        containerStyle={{ padding: 10 }}
+        onRemoveItem={handleRemoveItem}
+        textInputStyle={{
+          backgroundColor: 'black',
+
+        }}
+        itemStyle={{
+          padding: 10,
+          marginTop: 2,
+          backgroundColor: '#ddd',
+          borderColor: '#bbb',
+          borderWidth: 1,
+          borderRadius: 5,
+        }}
+        itemTextStyle={{ color: '#222' }}
+        itemsContainerStyle={{ maxHeight: 140 }}
+        items={items}
+        defaultIndex={2}
+        chip={true}
+        resetValue={false}
+        textInputProps={{
+          placeholder: "placeholder",
+          underlineColorAndroid: "transparent",
+          style: {
+            padding: 12,
+            borderWidth: 1,
+            borderColor: '#ccc',
+            borderRadius: 5,
+          
+          },
+          // onTextChange: console.log(text),
+        }}
+        listProps={{
+          nestedScrollEnabled: true,
+        }}
+      />
+
+
+        <View
+          style={[
+            styles.progressBar,
+            {
+              width: `${loadingProgress * 100}%`,
+              opacity: loadingBarVisible ? 1 : 0,
+              backgroundColor: colors.primary,
+            },
+          ]}
+        ></View>
+        <View
+          style={{
+            position: 'absolute',
+            // right: 10,
+            borderRadius: 5,
+            backgroundColor: colors.background,
+          }}
+        >
+          <TouchableOpacity onPress={() => {setTarget(url); setFlatList(false)}}>
+            <Ionicons
+              name={'arrow-forward-circle-outline'}
+              size={35}
+              color={colors.text}
+            />
+          </TouchableOpacity>
+        </View>
+        {/* <View style={styles.searchBar}>
+        
           <TextInput
             style={[
               styles.searchBarInput,
@@ -370,14 +521,24 @@ const onMessage =async (payload) => {
             selection={!isFocused ? { start: 0, end: 0 } : null}
             blurOnSubmit
             keyboardType="url"
-            onChangeText={(text) => setUrl(text)}
+            onChangeText={text => {
+              setUrl(text);
+              filterURLs(text);
+            }}
+            // onChangeText={(text) => setUrl(text)}
             onSubmitEditing={() => {
               Keyboard.dismiss;
               setTarget(upgradeURL(url));
+              setFlatList(false);
             }}
             value={url}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onFocus={() => {
+              setIsFocused(true);
+              setFlatList(true)
+            }}
+            onBlur={() =>{ setIsFocused(false);
+              // setFlatList(false)
+            }}
           />
           <View
             style={[
@@ -397,15 +558,84 @@ const onMessage =async (payload) => {
               backgroundColor: colors.background,
             }}
           >
-            <TouchableOpacity onPress={() => setTarget(url)}>
+            <TouchableOpacity onPress={() => {setTarget(url); setFlatList(false)}}>
               <Ionicons
                 name={'arrow-forward-circle-outline'}
                 size={35}
                 color={colors.text}
               />
             </TouchableOpacity>
-          </View>
+          </View> */}
+
+          
+          
+          
+          
+          {/* <FlatList
+        data={suggestions}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => setTarget(item)}>
+            <Text style={{ padding: 10 }}>{item}</Text>
+          </TouchableOpacity>
+        )}
+        keyExtractor={(item, index) => item}
+      /> */}
+      
+
+
+          
+  
+        
+    {/* <Text>
+        <AutocompleteDropdown
+  clearOnFocus={false}
+  closeOnBlur={true}
+  closeOnSubmit={false}
+  initialValue={{ id: '2' }} // or just '2'
+  onSelectItem={setSelectedItem}
+  dataSet={[
+    { id: '1', title: 'Alpha' },
+    { id: '2', title: 'Beta' },
+    { id: '3', title: 'Gamma' },
+  ]}
+/>;
+</Text> */}
+        
         </View>
+        {isFlatList && (
+            <SafeAreaView style={styles.containerFlatList}>
+        <FlatList
+        data={[
+          {key: 'http://new.circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://172.16.50.4'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+          {key: 'http://circleftp.net/'},
+
+        ]}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => {
+            
+            setUrl(item.key);
+            setTarget(item.key);
+          setFlatList(false)
+          }}>
+            <Text style={styles.flatItem}>{item.key}</Text>
+          </TouchableOpacity>
+        )}
+        
+      />
+          </SafeAreaView>
+      )}
+       
         <WebView
           allowsLinkPreview
           ref={browserRef}
@@ -451,6 +681,7 @@ const onMessage =async (payload) => {
           </TouchableOpacity>
         </View>
       </View>
+      </Fragment>
       ) : (
         <App
           videoUri={videoUrl}
@@ -468,11 +699,28 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: Constants.statusBarHeight,
   },
-  searchBar: {
-    flex: 0.1,
-    flexDirection: 'column',
+  containerFlatList: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 10,
+    // backgroundColor: 'green'
+    
+  },
+  flatItem: {
+    padding: 10,
+    fontSize: 18,
+    height: 44,
+    color: 'white'
+  },
+  searchBar: {
+    backgroundColor: 'white',
+   
+    // flexDirection: 'row',
+ 
+    flexDirection: 'column',
+    flexWrap: 'wrap',
+
   },
   searchBarInput: {
     height: 40,
@@ -495,7 +743,31 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 2,
-    marginBottom: 2,
+    marginTop: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 10,
+    marginTop: '50%',
+    width: '100%',
+    maxHeight: '70%',
+  },
+  urlItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    color: 'white',
+    width: '100%',
+  },
+  urlText: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    color: 'white',
+    fontSize: 16,
   },
 });
 

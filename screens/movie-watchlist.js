@@ -42,6 +42,8 @@ class Watchlist extends Component{
             return 'watchlist';
           case 'HistoryList':
             return 'historylist';
+          case 'RatedList':
+            return 'ratinglist'  
           // Add more cases as needed
           default:
             return 'watchlist'; // Default value if the name doesn't match any case
@@ -54,7 +56,8 @@ class Watchlist extends Component{
                 loading: true
             }, () => {
                 // Storage.clearAll();
-                storedData = JSON.parse(Storage.getString(this.state.data));
+                const watchlist = Storage.getString(this.state.data) ? JSON.parse(Storage.getString(this.state.data)) : {};
+                storedData = watchlist;
                 if (storedData && typeof storedData === 'object') {
                     // Convert object values into an array
                     const dataArray = Object.entries(storedData).map(([key, value]) => ({ id: key, ...value }));
